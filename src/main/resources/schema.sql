@@ -1,5 +1,7 @@
+DROP TABLE IF EXISTS payment;
 DROP TABLE IF EXISTS member;
-CREATE TABLE member
+
+CREATE TABLE `member`
 (
     member_id  BIGINT AUTO_INCREMENT PRIMARY KEY,
     name       VARCHAR(30) NOT NULL,
@@ -8,7 +10,6 @@ CREATE TABLE member
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
-DROP TABLE IF EXISTS payment;
 CREATE TABLE payment
 (
     payment_id     BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -17,7 +18,8 @@ CREATE TABLE payment
     payment_status TINYINT NOT NULL,
     payback_money  BIGINT  NULL,
     payback_status TINYINT NULL,
-    FOREIGN KEY (member_id) REFERENCES member (member_id),
+    FOREIGN KEY (member_id) REFERENCES member (member_id) ON DELETE CASCADE,
     INDEX idx_member_id (member_id)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
+
