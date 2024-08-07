@@ -19,9 +19,9 @@ CREATE TABLE payment
 (
     payment_id     BIGINT AUTO_INCREMENT PRIMARY KEY,
     member_id      BIGINT  NOT NULL,
-    payment_money  BIGINT  NOT NULL,
+    payment_amount  BIGINT  NOT NULL,
     payment_status TINYINT NOT NULL,
-    payback_money  BIGINT  NULL,
+    payback_amount  BIGINT  NULL,
     payback_status TINYINT NULL,
     FOREIGN KEY (member_id) REFERENCES member (member_id) ON DELETE CASCADE,
     INDEX idx_member_id (member_id)

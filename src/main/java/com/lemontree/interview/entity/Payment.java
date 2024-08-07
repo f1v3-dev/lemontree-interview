@@ -27,22 +27,21 @@ public class Payment {
     private Member member;
 
     @Column(nullable = false)
-    private Long paymentMoney;
+    private Long paymentAmount;
 
     @Column(nullable = false)
     private PaymentStatus paymentStatus;
 
     @Column(nullable = true)
-    private Long paybackMoney;
+    private Long paybackAmount;
 
     @Column(nullable = true)
     private PaybackStatus paybackStatus;
 
     @Builder
-    public Payment(Long paymentId, Member member, Long paymentMoney) {
-        this.paymentId = paymentId;
+    public Payment(Member member, Long paymentAmount) {
         this.member = member;
-        this.paymentMoney = paymentMoney;
+        this.paymentAmount = paymentAmount;
         this.paymentStatus = PaymentStatus.WAIT;
     }
 }
