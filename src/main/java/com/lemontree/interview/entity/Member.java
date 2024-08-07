@@ -33,12 +33,42 @@ public class Member {
     private Long money;
 
     @Column(nullable = false)
+    private Long onceLimit;
+
+    @Column(nullable = false)
+    private Long dailyLimit;
+
+    @Column(nullable = false)
+    private Long monthlyLimit;
+
+    @Column(nullable = false)
+    private Long dailyAccumulate;
+
+    @Column(nullable = false)
+    private Long monthlyAccumulate;
+
+    @Column(nullable = false)
     private Boolean isDeleted;
 
+    /**
+     * 유저 생성자입니다. (Builder Pattern)
+     *
+     * @param name         유저 이름
+     * @param money        유저의 보유 금액
+     * @param onceLimit    유저가 한 번에 사용할 수 있는 금액
+     * @param dailyLimit   유저가 하루에 사용할 수 있는 금액
+     * @param monthlyLimit 유저가 한 달에 사용할 수 있는 금액
+     */
     @Builder
-    public Member(String name, Long money) {
+    public Member(String name, Long money, Long onceLimit, Long dailyLimit, Long monthlyLimit) {
         this.name = name;
         this.money = money;
+        this.onceLimit = onceLimit;
+        this.dailyLimit = dailyLimit;
+        this.monthlyLimit = monthlyLimit;
+        this.dailyAccumulate = 0L;
+        this.monthlyAccumulate = 0L;
         this.isDeleted = Boolean.FALSE;
+
     }
 }
