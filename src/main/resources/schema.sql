@@ -3,10 +3,15 @@ DROP TABLE IF EXISTS member;
 
 CREATE TABLE `member`
 (
-    member_id  BIGINT AUTO_INCREMENT PRIMARY KEY,
-    name       VARCHAR(30) NOT NULL,
-    money      BIGINT      NOT NULL,
-    is_deleted BOOLEAN     NOT NULL DEFAULT FALSE
+    member_id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    name               VARCHAR(30) NOT NULL,
+    money              BIGINT      NOT NULL,
+    once_limit         BIGINT      NOT NULL,
+    daily_limit        BIGINT      NOT NULL,
+    monthly_limit      BIGINT      NOT NULL,
+    daily_accumulate   BIGINT      NOT NULL,
+    monthly_accumulate BIGINT      NOT NULL,
+    is_deleted         BOOLEAN     NOT NULL DEFAULT FALSE
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
