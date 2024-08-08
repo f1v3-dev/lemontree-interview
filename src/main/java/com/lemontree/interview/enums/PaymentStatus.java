@@ -1,7 +1,7 @@
-package com.lemontree.interview.entity;
+package com.lemontree.interview.enums;
 
-import lombok.Getter;
-import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.AllArgsConstructor;
 
 /**
  * 결제 상태 ENUM.
@@ -9,8 +9,8 @@ import lombok.ToString;
  * @author 정승조
  * @version 2024. 08. 07.
  */
-@Getter
-@ToString
+@JsonFormat(shape = JsonFormat.Shape.OBJECT)
+@AllArgsConstructor
 public enum PaymentStatus {
 
     // 결제 대기, 결제 완료, 결제 취소 3가지 상태를 가집니다.
@@ -19,8 +19,4 @@ public enum PaymentStatus {
     CANCEL("결제 취소");
 
     private final String description;
-
-    PaymentStatus(String description) {
-        this.description = description;
-    }
 }
