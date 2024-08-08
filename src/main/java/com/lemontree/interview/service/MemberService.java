@@ -1,6 +1,10 @@
 package com.lemontree.interview.service;
 
+import com.lemontree.interview.entity.Member;
+import com.lemontree.interview.exception.MemberNotFoundException;
 import com.lemontree.interview.repository.MemberRepository;
+import com.lemontree.interview.request.MemberCreate;
+import com.lemontree.interview.response.MemberResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,4 +37,39 @@ public class MemberService {
         memberRepository.resetMonthlyLimit();
     }
 
+
+    /**
+     * 유저를 생성합니다.
+     *
+     * @param request 유저 생성 요청 DTO
+     */
+    @Transactional
+    public Long createMember(MemberCreate request) {
+
+        Member member = Member.builder()
+                .name(request.getName())
+                .balance(request.getBalance())
+                .onceLimit(request.getOnceLimit())
+                .dailyLimit(request.getDailyLimit())
+                .monthlyLimit(request.getMonthlyLimit())
+                .isDeleted(request.getIsDeleted())
+                .build();
+
+        Member savedMember = memberRepository.save(member);
+
+        return savedMember.getId();
+    }
+
+    /**
+     * 유저의 ID로 유저를 조회합니다.
+     *
+     * @param memberId 조회할 유저 ID
+     * @return 유저 응답 DTO
+     */
+    public MemberResponse getMember(Long memberId) {
+        Member member = memberRepository.findById(memberId)
+                .orElseThrow(MemberNotFoundException::new);
+
+        return new MemberResponse(member);
+    }
 }
