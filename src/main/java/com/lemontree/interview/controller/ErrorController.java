@@ -58,4 +58,20 @@ public class ErrorController {
         return ResponseEntity.status(e.getStatusCode()).body(body);
     }
 
+
+    /**
+     * 전역 예외 처리 (Exception)
+     *
+     * @param e Exception
+     * @return status: 500 (INTERNAL_SERVER_ERROR), body: e.getMessage()
+     */
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponse> handleException(Exception e) {
+        ErrorResponse body = ErrorResponse.builder()
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .message(e.getMessage())
+                .build();
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
+    }
 }
