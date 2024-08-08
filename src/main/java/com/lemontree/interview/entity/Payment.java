@@ -1,5 +1,7 @@
 package com.lemontree.interview.entity;
 
+import com.lemontree.interview.enums.PaybackStatus;
+import com.lemontree.interview.enums.PaymentStatus;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -14,28 +16,39 @@ import lombok.NoArgsConstructor;
  */
 @Getter
 @Entity
-@Table(name = "payment")
+@Table(name = "payment",
+        indexes = {
+                @Index(name = "idx_payment_member_id", columnList = "member_id")
+        }
+)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Payment {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long paymentId;
+    @Column(name = "payment_id")
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "member_id")
     private Member member;
 
+    // 결제 금액
     @Column(nullable = false)
     private Long paymentAmount;
 
-    @Column(nullable = false)
+    // 결제 상태
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, columnDefinition = "VARCHAR(10)")
     private PaymentStatus paymentStatus;
 
+    // 페이백 금액
     @Column(nullable = true)
     private Long paybackAmount;
 
-    @Column(nullable = true)
+    // 페이백 상태
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = true, columnDefinition = "VARCHAR(10)")
     private PaybackStatus paybackStatus;
 
     @Builder
