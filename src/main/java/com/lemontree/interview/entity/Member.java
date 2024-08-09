@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
+import java.math.BigDecimal;
+
 /**
  * 유저 Entity 입니다.
  *
@@ -32,22 +34,22 @@ public class Member {
     private String name;
 
     @Column(nullable = false, name = "balance")
-    private Long balance;
+    private BigDecimal balance;
 
     @Column(nullable = false, name = "once_limit")
-    private Long onceLimit;
+    private BigDecimal onceLimit;
 
     @Column(nullable = false, name = "daily_limit")
-    private Long dailyLimit;
+    private BigDecimal dailyLimit;
 
     @Column(nullable = false, name = "monthly_limit")
-    private Long monthlyLimit;
+    private BigDecimal monthlyLimit;
 
     @Column(nullable = false, name = "daily_accumulate")
-    private Long dailyAccumulate;
+    private BigDecimal dailyAccumulate;
 
     @Column(nullable = false, name = "monthly_accumulate")
-    private Long monthlyAccumulate;
+    private BigDecimal monthlyAccumulate;
 
     @Column(nullable = false, name = "is_deleted")
     private Boolean isDeleted;
@@ -62,27 +64,28 @@ public class Member {
      * @param monthlyLimit 유저가 한 달에 사용할 수 있는 금액
      */
     @Builder
-    public Member(String name, Long balance, Long onceLimit, Long dailyLimit, Long monthlyLimit,
+    public Member(String name, BigDecimal balance, BigDecimal onceLimit, BigDecimal dailyLimit, BigDecimal monthlyLimit,
                   Boolean isDeleted) {
         this.name = name;
         this.balance = balance;
         this.onceLimit = onceLimit;
         this.dailyLimit = dailyLimit;
         this.monthlyLimit = monthlyLimit;
-        this.dailyAccumulate = 0L;
-        this.monthlyAccumulate = 0L;
+        this.dailyAccumulate = BigDecimal.ZERO;
+        this.monthlyAccumulate = BigDecimal.ZERO;
         this.isDeleted = isDeleted != null ? isDeleted : Boolean.FALSE;
     }
+
 
     /**
      * 유저의 누적 금액과 잔액을 업데이트합니다.
      *
      * @param amount 결제 금액
      */
-    public void updateAccumulateAndBalance(Long amount) {
-        this.dailyAccumulate += amount;
-        this.monthlyAccumulate += amount;
-        this.balance -= amount;
+    public void updateAccumulateAndBalance(BigDecimal amount) {
+        this.dailyAccumulate = this.dailyAccumulate.add(amount);
+        this.monthlyAccumulate = this.monthlyAccumulate.add(amount);
+        this.balance = this.balance.subtract(amount);
     }
 
     /**
@@ -90,8 +93,8 @@ public class Member {
      *
      * @param paybackAmount 페이백 금액
      */
-    public void payback(Long paybackAmount) {
-        this.balance += paybackAmount;
+    public void payback(BigDecimal paybackAmount) {
+        this.balance = this.balance.add(paybackAmount);
     }
 
     /**
@@ -99,8 +102,8 @@ public class Member {
      *
      * @param paymentAmount 결제 금액
      */
-    public void refund(Long paymentAmount) {
-        this.balance += paymentAmount;
+    public void refund(BigDecimal paymentAmount) {
+        this.balance = this.balance.add(paymentAmount);
     }
 
     /**
@@ -108,13 +111,13 @@ public class Member {
      *
      * @param paybackAmount 페이백 금액
      */
-    public void revokePayback(Long paybackAmount) {
+    public void revokePayback(BigDecimal paybackAmount) {
 
         // 페이백 금액이 잔액보다 많은 경우, 결제 취소가 불가능합니다.
-        if (this.balance < paybackAmount) {
+        if (this.balance.compareTo(paybackAmount) < 0) {
             throw new PaymentCancelNotAllowedException();
         }
 
-        this.balance -= paybackAmount;
+        this.balance = this.balance.subtract(paybackAmount);
     }
 }
