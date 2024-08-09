@@ -8,8 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.util.ReflectionTestUtils;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
 
@@ -39,10 +39,10 @@ class MemberTest {
         // given
         Member member = Member.builder()
                 .name("정승조")
-                .balance(50000L)
-                .onceLimit(1000L)
-                .dailyLimit(10000L)
-                .monthlyLimit(300000L)
+                .balance(BigDecimal.valueOf(50000L))
+                .onceLimit(BigDecimal.valueOf(1000L))
+                .dailyLimit(BigDecimal.valueOf(10000L))
+                .monthlyLimit(BigDecimal.valueOf(300000L))
                 .build();
 
         // when
@@ -69,14 +69,12 @@ class MemberTest {
         // given
         Member member = Member.builder()
                 .name("정승조")
-                .balance(50000L)
-                .onceLimit(1000L)
-                .dailyLimit(10000L)
-                .monthlyLimit(300000L)
+                .balance(BigDecimal.valueOf(50000L))
+                .onceLimit(BigDecimal.valueOf(1000L))
+                .dailyLimit(BigDecimal.valueOf(10000L))
+                .monthlyLimit(BigDecimal.valueOf(300000L))
                 .isDeleted(Boolean.FALSE)
                 .build();
-
-        ReflectionTestUtils.setField(member, "dailyAccumulate", 15000L);
 
         // when
         Member savedMember = memberRepository.save(member);
