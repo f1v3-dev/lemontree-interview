@@ -1,7 +1,7 @@
 package com.lemontree.interview.service;
 
 import com.lemontree.interview.entity.Member;
-import com.lemontree.interview.exception.MemberNotFoundException;
+import com.lemontree.interview.exception.member.MemberNotFoundException;
 import com.lemontree.interview.repository.MemberRepository;
 import com.lemontree.interview.request.MemberCreate;
 import com.lemontree.interview.response.MemberResponse;
@@ -66,6 +66,7 @@ public class MemberService {
      * @param memberId 조회할 유저 ID
      * @return 유저 응답 DTO
      */
+    @Transactional(readOnly = true)
     public MemberResponse getMember(Long memberId) {
         Member member = memberRepository.findById(memberId)
                 .orElseThrow(MemberNotFoundException::new);

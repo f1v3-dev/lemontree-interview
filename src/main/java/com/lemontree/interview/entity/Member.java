@@ -1,5 +1,6 @@
 package com.lemontree.interview.entity;
 
+import com.lemontree.interview.exception.payment.PaymentCancelNotAllowedException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -82,5 +83,38 @@ public class Member {
         this.dailyAccumulate += amount;
         this.monthlyAccumulate += amount;
         this.balance -= amount;
+    }
+
+    /**
+     * 유저에게 페이백 금액을 지급합니다.
+     *
+     * @param paybackAmount 페이백 금액
+     */
+    public void payback(Long paybackAmount) {
+        this.balance += paybackAmount;
+    }
+
+    /**
+     * 결제 취소를 진행합니다.
+     *
+     * @param paymentAmount 결제 금액
+     */
+    public void refund(Long paymentAmount) {
+        this.balance += paymentAmount;
+    }
+
+    /**
+     * 페이백 취소를 진행합니다.
+     *
+     * @param paybackAmount 페이백 금액
+     */
+    public void revokePayback(Long paybackAmount) {
+
+        // 페이백 금액이 잔액보다 많은 경우, 결제 취소가 불가능합니다.
+        if (this.balance < paybackAmount) {
+            throw new PaymentCancelNotAllowedException();
+        }
+
+        this.balance -= paybackAmount;
     }
 }

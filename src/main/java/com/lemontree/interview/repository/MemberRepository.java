@@ -1,9 +1,13 @@
 package com.lemontree.interview.repository;
 
 import com.lemontree.interview.entity.Member;
+import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
+
+import java.util.Optional;
 
 /**
  * Member JPA Repository.
@@ -27,4 +31,13 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Modifying(clearAutomatically = true)
     @Query(value = "UPDATE Member m SET m.monthlyAccumulate = 0")
     void resetMonthlyLimit();
+
+    /**
+     * 유저 ID로 유저 정보를 조회합니다. (비관적 락 사용)
+     *
+     * @param id 유저 ID
+     * @return 유저 정보
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<Member> findWithPessimisticLockById(Long id);
 }

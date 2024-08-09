@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/member")
 public class MemberController {
 
     private final MemberService memberService;
@@ -28,7 +27,7 @@ public class MemberController {
      * @param request 유저 생성 요청 DTO
      * @return 201 (CREATED), body: 생성된 유저 ID
      */
-    @PostMapping
+    @PostMapping("/api/v1/members")
     public ResponseEntity<Long> createMember(@Valid @RequestBody MemberCreate request) {
 
         return ResponseEntity
@@ -43,7 +42,7 @@ public class MemberController {
      * @param memberId 조회할 유저 ID
      * @return 200 (OK), body: 유저 응답 DTO
      */
-    @GetMapping("/{memberId}")
+    @GetMapping("/api/v1/members/{memberId}")
     public ResponseEntity<MemberResponse> getMember(@PathVariable("memberId") Long memberId) {
         return ResponseEntity.ok(memberService.getMember(memberId));
     }
