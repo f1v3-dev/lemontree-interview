@@ -1,6 +1,5 @@
 package com.lemontree.interview.enums;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 
 /**
@@ -9,9 +8,8 @@ import lombok.AllArgsConstructor;
  * @author 정승조
  * @version 2024. 08. 07.
  */
-@JsonFormat(shape = JsonFormat.Shape.OBJECT)
 @AllArgsConstructor
-public enum PaymentStatus {
+public enum PaymentStatus implements JsonEnum {
 
     // 결제 대기, 결제 완료, 결제 취소 3가지 상태를 가집니다.
     WAIT("결제 대기"),
@@ -19,4 +17,14 @@ public enum PaymentStatus {
     CANCEL("결제 취소");
 
     private final String description;
+
+    @Override
+    public String getStatus() {
+        return this.name();
+    }
+
+    @Override
+    public String getDescription() {
+        return this.description;
+    }
 }
