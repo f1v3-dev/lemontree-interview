@@ -1,4 +1,6 @@
-package com.lemontree.interview.exception;
+package com.lemontree.interview.exception.member;
+
+import com.lemontree.interview.exception.GeneralException;
 
 /**
  * 1달 한도 초과 예외 클래스입니다.

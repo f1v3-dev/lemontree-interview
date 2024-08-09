@@ -1,4 +1,6 @@
-package com.lemontree.interview.exception;
+package com.lemontree.interview.exception.member;
+
+import com.lemontree.interview.exception.GeneralException;
 
 /**
  * 유저를 찾을 수 없을 때 발생하는 예외입니다.
