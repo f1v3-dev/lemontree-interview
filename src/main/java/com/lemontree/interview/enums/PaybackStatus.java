@@ -1,8 +1,6 @@
 package com.lemontree.interview.enums;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
-import lombok.Getter;
 
 /**
  * 페이백 상태 ENUM.
