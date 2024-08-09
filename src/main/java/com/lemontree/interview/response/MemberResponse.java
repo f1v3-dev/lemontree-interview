@@ -3,6 +3,8 @@ package com.lemontree.interview.response;
 import com.lemontree.interview.entity.Member;
 import lombok.Getter;
 
+import java.math.BigDecimal;
+
 /**
  * 회원 응답 클래스입니다.
  *
@@ -14,12 +16,12 @@ public class MemberResponse {
 
     private final Long memberId;
     private final String name;
-    private final Long balance;
-    private final Long onceLimit;
-    private final Long dailyLimit;
-    private final Long monthlyLimit;
-    private final Long dailyAccumulate;
-    private final Long monthlyAccumulate;
+    private final BigDecimal balance;
+    private final BigDecimal onceLimit;
+    private final BigDecimal dailyLimit;
+    private final BigDecimal monthlyLimit;
+    private final BigDecimal dailyAccumulate;
+    private final BigDecimal monthlyAccumulate;
     private final Boolean isDeleted;
 
     public MemberResponse(final Member member) {
