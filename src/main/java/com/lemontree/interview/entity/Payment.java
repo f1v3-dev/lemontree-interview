@@ -32,27 +32,26 @@ public class Payment {
     @Column(name = "payment_id")
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(name = "member_id")
-    private Member member;
+    @Column(nullable = false, name = "member_id")
+    private Long memberId;
 
-    @Column(nullable = false)
+    @Column(nullable = false, name = "payment_amount")
     private BigDecimal paymentAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "VARCHAR(10)")
+    @Column(nullable = false, columnDefinition = "VARCHAR(10)", name = "payment_status")
     private PaymentStatus paymentStatus;
 
-    @Column(nullable = true)
+    @Column(nullable = false, name = "payback_amount")
     private BigDecimal paybackAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = true, columnDefinition = "VARCHAR(10)")
+    @Column(nullable = false, columnDefinition = "VARCHAR(10)", name = "payback_status")
     private PaybackStatus paybackStatus;
 
     @Builder
-    public Payment(Member member, BigDecimal paymentAmount, BigDecimal paybackAmount) {
-        this.member = member;
+    public Payment(Long memberId, BigDecimal paymentAmount, BigDecimal paybackAmount) {
+        this.memberId = memberId;
         this.paymentAmount = paymentAmount;
         this.paymentStatus = PaymentStatus.WAIT;
         this.paybackAmount = paybackAmount;
