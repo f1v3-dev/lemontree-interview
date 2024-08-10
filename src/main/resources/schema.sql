@@ -15,14 +15,19 @@ CREATE TABLE `member`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
-CREATE TABLE payment
+CREATE TABLE `payment`
 (
-    payment_id     BIGINT AUTO_INCREMENT PRIMARY KEY,
-    member_id      BIGINT         NOT NULL,
-    payment_amount DECIMAL(12, 0) NOT NULL,
-    payment_status VARCHAR(10)    NOT NULL,
-    payback_amount DECIMAL(12, 0) NULL,
-    payback_status VARCHAR(10)    NULL,
+    payment_id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    member_id           BIGINT         NOT NULL,
+    payment_amount      DECIMAL(12, 0) NOT NULL,
+    payment_status      VARCHAR(10)    NOT NULL,
+    payback_amount      DECIMAL(12, 0) NOT NULL,
+    payback_status      VARCHAR(10)    NOT NULL,
+    payment_approved_at DATETIME       NULL,
+    payment_canceled_at DATETIME       NULL,
+    payback_approved_at DATETIME       NULL,
+    payback_canceled_at DATETIME       NULL,
+
     FOREIGN KEY (member_id) REFERENCES member (member_id) ON DELETE CASCADE,
     INDEX idx_payment_member_id (member_id)
 ) ENGINE = InnoDB

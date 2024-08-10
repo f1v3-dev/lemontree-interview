@@ -11,6 +11,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * 결제 Entity 입니다.
@@ -50,6 +51,18 @@ public class Payment {
     @Column(nullable = false, columnDefinition = "VARCHAR(10)", name = "payback_status")
     private PaybackStatus paybackStatus;
 
+    @Column(nullable = true, name = "payment_approved_at")
+    private LocalDateTime paymentApprovedAt;
+
+    @Column(nullable = true, name = "payment_canceled_at")
+    private LocalDateTime paymentCanceledAt;
+
+    @Column(nullable = true, name = "payback_approved_at")
+    private LocalDateTime paybackApprovedAt;
+
+    @Column(nullable = true, name = "payback_canceled_at")
+    private LocalDateTime paybackCanceledAt;
+
     @Builder
     public Payment(Long memberId, BigDecimal paymentAmount, BigDecimal paybackAmount) {
         this.memberId = memberId;
@@ -64,14 +77,9 @@ public class Payment {
      */
     public void completePayment() {
         this.paymentStatus = PaymentStatus.DONE;
+        this.paymentApprovedAt = LocalDateTime.now();
     }
 
-    /**
-     * 페이백이 정상적으로 완료되었을 때 페이백 상태를 완료(DONE)으로 변경합니다.
-     */
-    public void completePayback() {
-        this.paybackStatus = PaybackStatus.DONE;
-    }
 
     /**
      * 결제 취소 요청에 따른 결제 상태 변경
@@ -83,6 +91,15 @@ public class Payment {
         }
 
         this.paymentStatus = PaymentStatus.CANCEL;
+        this.paymentCanceledAt = LocalDateTime.now();
+    }
+
+    /**
+     * 페이백이 정상적으로 완료되었을 때 페이백 상태를 완료(DONE)으로 변경합니다.
+     */
+    public void completePayback() {
+        this.paybackStatus = PaybackStatus.DONE;
+        this.paybackApprovedAt = LocalDateTime.now();
     }
 
     /**
@@ -95,5 +112,6 @@ public class Payment {
         }
 
         this.paybackStatus = PaybackStatus.CANCEL;
+        this.paybackCanceledAt = LocalDateTime.now();
     }
 }
