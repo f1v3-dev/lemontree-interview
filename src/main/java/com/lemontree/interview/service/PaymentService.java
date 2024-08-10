@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 
 /**
  * 결제 Service 입니다.
@@ -97,9 +99,53 @@ public class PaymentService {
             throw new PaymentUnauthorizedException();
         }
 
-        // 1. 결제 취소 로직
-        payment.cancelPayment();
-        member.refund(payment.getPaymentAmount());
+        // 결제 취소 로직
+        LocalDateTime now = LocalDateTime.now();
+        payment.cancelPayment(now);
+        member.updateBalance(payment.getPaymentAmount());
+
+        // TODO: 결제 취소를 요청한 유저의 누적 금액을 갱신합니다.
+
+        // 1. 결제한 일자와 취소하는 일자(오늘)이 같은 날짜인가?
+        LocalDateTime approvedAt = payment.getPaymentApprovedAt();
+        if (compareDay(now, approvedAt) == 0) {
+            // 일간 누적 금액에서 결제 금액을 차감한다.
+            BigDecimal paymentAmount = payment.getPaymentAmount();
+            member.updateDailyAccumulate(paymentAmount.negate());
+        }
+
+        // 2. 결제한 일자와 취소하는 일자(오늘)이 같은 달인가?
+        if (compareMonth(now, approvedAt) == 0) {
+            // 월간 누적 금액에서 결제 금액을 차감한다.
+            BigDecimal paymentAmount = payment.getPaymentAmount();
+            member.updateMonthlyAccumulate(paymentAmount.negate());
+        }
+    }
+
+    /**
+     * 두 날짜의 일자를 비교합니다.
+     *
+     * @param aDate 날짜 A
+     * @param bDate 날짜 B
+     * @return 같은 경우 0, aDate가 더 큰 경우 1, bDate가 더 큰 경우 -1
+     */
+    private static int compareDay(LocalDateTime aDate, LocalDateTime bDate) {
+        LocalDateTime aDayDate = aDate.truncatedTo(ChronoUnit.DAYS);
+        LocalDateTime bDayDate = bDate.truncatedTo(ChronoUnit.DAYS);
+        return aDayDate.compareTo(bDayDate);
+    }
+
+    /**
+     * 두 날짜의 월을 비교합니다.
+     *
+     * @param aDate 날짜 A
+     * @param bDate 날짜 B
+     * @return 같은 경우 0, aDate가 더 큰 경우 1, bDate가 더 큰 경우 -1
+     */
+    private static int compareMonth(LocalDateTime aDate, LocalDateTime bDate) {
+        LocalDateTime aMonthDate = aDate.truncatedTo(ChronoUnit.MONTHS);
+        LocalDateTime bMonthDate = bDate.truncatedTo(ChronoUnit.MONTHS);
+        return aMonthDate.compareTo(bMonthDate);
     }
 
 

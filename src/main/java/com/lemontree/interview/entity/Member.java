@@ -83,9 +83,36 @@ public class Member {
      * @param amount 결제 금액
      */
     public void updateAccumulateAndBalance(BigDecimal amount) {
-        this.dailyAccumulate = this.dailyAccumulate.add(amount);
-        this.monthlyAccumulate = this.monthlyAccumulate.add(amount);
+        updateDailyAccumulate(amount);
+        updateMonthlyAccumulate(amount);
+        updateBalance(amount);
+    }
+
+    /**
+     * 유저의 잔액을 업데이트합니다.
+     *
+     * @param amount 차감 금액
+     */
+    public void updateBalance(BigDecimal amount) {
         this.balance = this.balance.subtract(amount);
+    }
+
+    /**
+     * 유저의 일간 누적 금액을 업데이트합니다.
+     *
+     * @param amount 결제 금액
+     */
+    public void updateDailyAccumulate(BigDecimal amount) {
+        this.dailyAccumulate = this.dailyAccumulate.add(amount);
+    }
+
+    /**
+     * 유저의 월간 누적 금액을 업데이트합니다.
+     *
+     * @param amount 결제 금액
+     */
+    public void updateMonthlyAccumulate(BigDecimal amount) {
+        this.monthlyAccumulate = this.monthlyAccumulate.add(amount);
     }
 
     /**

@@ -84,14 +84,14 @@ public class Payment {
     /**
      * 결제 취소 요청에 따른 결제 상태 변경
      */
-    public void cancelPayment() {
+    public void cancelPayment(LocalDateTime now) {
 
         if (this.paymentStatus != PaymentStatus.DONE) {
             throw new PaymentCancelNotAllowedException();
         }
 
         this.paymentStatus = PaymentStatus.CANCEL;
-        this.paymentCanceledAt = LocalDateTime.now();
+        this.paymentCanceledAt = now;
     }
 
     /**
