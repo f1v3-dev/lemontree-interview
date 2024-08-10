@@ -2,6 +2,7 @@ package com.lemontree.interview.entity;
 
 import com.lemontree.interview.enums.PaybackStatus;
 import com.lemontree.interview.enums.PaymentStatus;
+import com.lemontree.interview.exception.payback.PaybackCancelNotAllowedException;
 import com.lemontree.interview.exception.payment.PaymentCancelNotAllowedException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -90,7 +91,7 @@ public class Payment {
     public void cancelPayback() {
 
         if (this.paybackStatus != PaybackStatus.DONE) {
-            throw new PaymentCancelNotAllowedException();
+            throw new PaybackCancelNotAllowedException();
         }
 
         this.paybackStatus = PaybackStatus.CANCEL;
