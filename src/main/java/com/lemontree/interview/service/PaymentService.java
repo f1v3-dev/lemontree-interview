@@ -2,9 +2,7 @@ package com.lemontree.interview.service;
 
 import com.lemontree.interview.entity.Member;
 import com.lemontree.interview.entity.Payment;
-import com.lemontree.interview.enums.PaybackStatus;
 import com.lemontree.interview.exception.member.*;
-import com.lemontree.interview.exception.payment.PaybackAlreadyDoneException;
 import com.lemontree.interview.exception.payment.PaymentNotFoundException;
 import com.lemontree.interview.exception.payment.PaymentUnauthorizedException;
 import com.lemontree.interview.repository.MemberRepository;
@@ -66,7 +64,7 @@ public class PaymentService {
         checkLimitAndBalance(member, request.getPaymentAmount());
 
         Payment payment = Payment.builder()
-                .member(member)
+                .memberId(memberId)
                 .paymentAmount(request.getPaymentAmount())
                 .paybackAmount(request.getPaybackAmount())
                 .build();
@@ -79,20 +77,6 @@ public class PaymentService {
         savedPayment.completePayment();
 
         log.info("결제가 완료되었습니다. [결제 ID = {}]", savedPayment.getId());
-
-        // TODO: 결제 후 페이백 지급 API 추가
-        if (payment.getPaybackStatus() == PaybackStatus.DONE) {
-            throw new PaybackAlreadyDoneException();
-        }
-
-        // 페이백 지급
-        BigDecimal paybackAmount = payment.getPaybackAmount();
-        if (BigDecimalUtils.is(paybackAmount).greaterThan(BigDecimal.ZERO)) {
-            member.payback(paybackAmount);
-        }
-
-        log.info("페이백이 정상적으로 완료되었습니다. [페이백 금액 = {}]", paybackAmount);
-        payment.completePayback();
     }
 
 
@@ -109,22 +93,13 @@ public class PaymentService {
 
 
         // 결제를 한 유저와 결제 취소를 요청한 유저가 같은 유저인지 체크합니다.
-        if (!payment.getMember().getId().equals(member.getId())) {
+        if (!payment.getMemberId().equals(member.getId())) {
             throw new PaymentUnauthorizedException();
         }
 
         // 1. 결제 취소 로직
         payment.cancelPayment();
         member.refund(payment.getPaymentAmount());
-
-        // 2. 페이백 취소 로직
-        payment.cancelPayback();
-        member.revokePayback(payment.getPaybackAmount());
-
-        log.info("결제 취소가 완료되었습니다. [결제 ID = {}]", payment.getId());
-
-        // 고려해볼만한 것 : 결제 금액 환불(+1000) + 페이백 금액(-500) = 500원 환불일 경우,
-        // 한 번에 처리할 수 있을 것 같은데? -> 어떤 상황에서 오류가 발생했는지 파악하기 위해서는 구분하는게 좋나?
     }
 
 

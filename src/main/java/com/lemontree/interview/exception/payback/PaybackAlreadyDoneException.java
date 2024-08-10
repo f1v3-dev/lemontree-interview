@@ -1,4 +1,4 @@
-package com.lemontree.interview.exception.payment;
+package com.lemontree.interview.exception.payback;
 
 import com.lemontree.interview.exception.GeneralException;
 
