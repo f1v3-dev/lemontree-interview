@@ -93,7 +93,7 @@ public class PaybackService {
             member.revokePayback(paymentAmount);
         }
 
-        payment.cancelPayment();
+        payment.cancelPayback();
 
         log.info("페이백 취소가 완료되었습니다. [결제 ID = {}]", payment.getId());
     }
