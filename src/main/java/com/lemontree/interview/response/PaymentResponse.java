@@ -25,7 +25,7 @@ public class PaymentResponse {
 
     public PaymentResponse(final Payment payment) {
         this.paymentId = payment.getId();
-        this.memberId = payment.getMember().getId();
+        this.memberId = payment.getMemberId();
         this.paymentAmount = payment.getPaymentAmount();
         this.paymentStatus = payment.getPaymentStatus();
         this.paybackAmount = payment.getPaybackAmount();
