@@ -63,6 +63,8 @@ public class PaybackService {
         }
 
         payment.completePayback();
+
+        log.info("페이백이 완료되었습니다. [결제 ID = {}]", payment.getId());
     }
 
     /**
@@ -96,5 +98,7 @@ public class PaybackService {
         payment.cancelPayback();
 
         log.info("페이백 취소가 완료되었습니다. [결제 ID = {}]", payment.getId());
+
+        // throw new RuntimeException("상위 트랜잭션이 roll-back 되는 문제가 존재함");
     }
 }

@@ -2,6 +2,7 @@ package com.lemontree.interview.service;
 
 import com.lemontree.interview.entity.Member;
 import com.lemontree.interview.entity.Payment;
+import com.lemontree.interview.enums.PaybackStatus;
 import com.lemontree.interview.exception.member.*;
 import com.lemontree.interview.exception.payment.PaymentNotFoundException;
 import com.lemontree.interview.exception.payment.PaymentUnauthorizedException;
@@ -32,6 +33,7 @@ import java.time.YearMonth;
 @RequiredArgsConstructor
 public class PaymentService {
 
+    private final PaybackService paybackService;
     private final PaymentRepository paymentRepository;
     private final MemberRepository memberRepository;
 
@@ -57,7 +59,7 @@ public class PaymentService {
      * @param request  결제 요청 정보 (결제 금액)
      */
     @Transactional(timeout = 5, isolation = Isolation.REPEATABLE_READ)
-    public void processPayment(Long memberId, PaymentRequest request) {
+    public Long processPayment(Long memberId, PaymentRequest request) {
 
         // 비관적 락을 사용하여 멤버 정보를 조회합니다.
         Member member = memberRepository.findWithPessimisticLockById(memberId)
@@ -80,9 +82,17 @@ public class PaymentService {
         savedPayment.completePayment();
 
         log.info("결제가 완료되었습니다. [결제 ID = {}]", savedPayment.getId());
+
+        return savedPayment.getId();
     }
 
 
+    /**
+     * 결제 취소를 진행합니다. 만약 페이백 정보가 존재한다면, 페이백도 동시에 취소합니다.
+     *
+     * @param memberId
+     * @param paymentId
+     */
     @Transactional(timeout = 5, isolation = Isolation.REPEATABLE_READ)
     public void cancelPayment(Long memberId, Long paymentId) {
 
@@ -98,6 +108,16 @@ public class PaymentService {
         // 결제를 한 유저와 결제 취소를 요청한 유저가 같은 유저인지 체크합니다.
         if (!payment.getMemberId().equals(member.getId())) {
             throw new PaymentUnauthorizedException();
+        }
+
+        // 페이백도 진행되었을 경우 우선적으로 취소 진행
+        if (payment.getPaybackStatus() == PaybackStatus.DONE) {
+            // 여기서 오류가 발생한다고 하더라도 결제 취소는 진행되어야 합니다.
+            try {
+                paybackService.cancelPayback(paymentId);
+            } catch (Exception e) {
+                log.error("페이백 취소 중 오류가 발생하였습니다. [결제 ID = {}]", paymentId, e);
+            }
         }
 
         // 결제 취소 로직
@@ -119,6 +139,8 @@ public class PaymentService {
             BigDecimal paymentAmount = payment.getPaymentAmount();
             member.decreaseMonthlyAccumulate(paymentAmount);
         }
+
+
     }
 
     /**
