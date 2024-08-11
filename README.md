@@ -1,5 +1,11 @@
 # lemontree-interview
 
+## 문서
+
+- [DB Schema](docs/schema.sql)
+- [요구사항 분석](docs/요구사항_분석.md)
+- [생각 정리](docs/생각정리.md)
+
 ## 요구사항
 
 ### 기능 요구사항
@@ -30,8 +36,3 @@
 2. 발생할 수 있는 문제와 이에 대한 해결책 (비용 측면 또는 성능 측면 등)
 3. Github에 올리고 해당 링크 공유 혹은 첨부파일
 
-## 문서
-
-- [요구사항 분석](docs/요구사항_분석.md)
-- [DB Schema](docs/schema.sql)
-- [생각 정리](docs/생각정리)
