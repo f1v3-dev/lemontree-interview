@@ -8,6 +8,7 @@ CREATE TABLE `member`
     member_id          BIGINT AUTO_INCREMENT PRIMARY KEY,
     name               VARCHAR(30)    NOT NULL,
     balance            DECIMAL(12, 0) NOT NULL,
+    balance_limit      DECIMAL(12, 0) NOT NULL,
     once_limit         DECIMAL(12, 0) NOT NULL,
     daily_limit        DECIMAL(12, 0) NOT NULL,
     monthly_limit      DECIMAL(12, 0) NOT NULL,

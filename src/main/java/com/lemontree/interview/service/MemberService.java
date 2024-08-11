@@ -49,6 +49,7 @@ public class MemberService {
         Member member = Member.builder()
                 .name(request.getName())
                 .balance(request.getBalance())
+                .balanceLimit(request.getBalanceLimit())
                 .onceLimit(request.getOnceLimit())
                 .dailyLimit(request.getDailyLimit())
                 .monthlyLimit(request.getMonthlyLimit())

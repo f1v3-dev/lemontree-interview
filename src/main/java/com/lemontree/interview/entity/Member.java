@@ -1,7 +1,9 @@
 package com.lemontree.interview.entity;
 
+import com.lemontree.interview.exception.member.BalanceExceededException;
 import com.lemontree.interview.exception.member.BalanceLackException;
 import com.lemontree.interview.exception.payback.PaybackCancelNotAllowedException;
+import com.lemontree.interview.util.BigDecimalUtils;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -37,6 +39,9 @@ public class Member {
     @Column(nullable = false, name = "balance")
     private BigDecimal balance;
 
+    @Column(nullable = false, name = "balance_limit")
+    private BigDecimal balanceLimit;
+
     @Column(nullable = false, name = "once_limit")
     private BigDecimal onceLimit;
 
@@ -60,15 +65,21 @@ public class Member {
      *
      * @param name         유저 이름
      * @param balance      유저의 보유 금액
+     * @param balanceLimit 유저가 보유할 수 있는 최대 금액
      * @param onceLimit    유저가 한 번에 사용할 수 있는 금액
      * @param dailyLimit   유저가 하루에 사용할 수 있는 금액
      * @param monthlyLimit 유저가 한 달에 사용할 수 있는 금액
      */
     @Builder
-    public Member(String name, BigDecimal balance, BigDecimal onceLimit, BigDecimal dailyLimit, BigDecimal monthlyLimit,
-                  Boolean isDeleted) {
+    public Member(String name, BigDecimal balance, BigDecimal balanceLimit,
+                  BigDecimal onceLimit, BigDecimal dailyLimit, BigDecimal monthlyLimit, Boolean isDeleted) {
+
+        // preconditions
+        checkPrecondition(balance, balanceLimit, onceLimit, dailyLimit, monthlyLimit);
+
         this.name = name;
         this.balance = balance;
+        this.balanceLimit = balanceLimit;
         this.onceLimit = onceLimit;
         this.dailyLimit = dailyLimit;
         this.monthlyLimit = monthlyLimit;
@@ -77,12 +88,72 @@ public class Member {
         this.isDeleted = isDeleted != null ? isDeleted : Boolean.FALSE;
     }
 
+    private void checkPrecondition(BigDecimal balance, BigDecimal balanceLimit, BigDecimal onceLimit, BigDecimal dailyLimit, BigDecimal monthlyLimit) {
+        validateBalance(balance, balanceLimit);
+        validateLimit(onceLimit, dailyLimit, monthlyLimit);
+    }
+
+    /**
+     * 유저의 보유 금액과 최대 보유 금액을 검증합니다.
+     *
+     * @param balance      유저 보유 금액
+     * @param balanceLimit 유저 최대 보유 금액
+     */
+    private void validateBalance(BigDecimal balance, BigDecimal balanceLimit) {
+        if (BigDecimalUtils.is(balance).lessThan(BigDecimal.ZERO)) {
+            throw new IllegalArgumentException("보유 금액은 0 이상이어야 합니다.");
+        }
+
+        if (BigDecimalUtils.is(balanceLimit).lessThan(BigDecimal.ZERO)) {
+            throw new IllegalArgumentException("최대 보유 금액은 0 이상이어야 합니다.");
+        }
+
+        if (BigDecimalUtils.is(balance).greaterThan(balanceLimit)) {
+            throw new IllegalArgumentException("보유 금액은 최대 보유 금액보다 작거나 같아야 합니다.");
+        }
+    }
+
+    /**
+     * 유저의 한 번에 사용할 수 있는 금액, 하루에 사용할 수 있는 금액, 한 달에 사용할 수 있는 금액을 검증합니다.
+     *
+     * @param onceLimit    한 번에 사용할 수 있는 금액
+     * @param dailyLimit   하루에 사용할 수 있는 금액
+     * @param monthlyLimit 한 달에 사용할 수 있는 금액
+     */
+    private void validateLimit(BigDecimal onceLimit, BigDecimal dailyLimit, BigDecimal monthlyLimit) {
+        if (BigDecimalUtils.is(onceLimit).lessThan(BigDecimal.ZERO)) {
+            throw new IllegalArgumentException("한 번에 사용할 수 있는 금액은 0 이상이어야 합니다.");
+        }
+
+        if (BigDecimalUtils.is(dailyLimit).lessThan(BigDecimal.ZERO)) {
+            throw new IllegalArgumentException("하루에 사용할 수 있는 금액은 0 이상이어야 합니다.");
+        }
+
+        if (BigDecimalUtils.is(monthlyLimit).lessThan(BigDecimal.ZERO)) {
+            throw new IllegalArgumentException("한 달에 사용할 수 있는 금액은 0 이상이어야 합니다.");
+        }
+
+        if (BigDecimalUtils.is(onceLimit).greaterThan(dailyLimit)) {
+            throw new IllegalArgumentException("한 번에 사용할 수 있는 금액은 하루에 사용할 수 있는 금액보다 작거나 같아야 합니다.");
+        }
+
+        if (BigDecimalUtils.is(dailyLimit).greaterThan(monthlyLimit)) {
+            throw new IllegalArgumentException("하루에 사용할 수 있는 금액은 한 달에 사용할 수 있는 금액보다 작거나 같아야 합니다.");
+        }
+    }
+
     /**
      * 유저의 잔액에 금액을 추가합니다.
      *
      * @param amount 추가할 금액
      */
     private void addBalance(BigDecimal amount) {
+
+        BigDecimal added = this.balance.add(amount);
+        if (BigDecimalUtils.is(added).greaterThan(this.balanceLimit)) {
+            throw new BalanceExceededException();
+        }
+
         this.balance = this.balance.add(amount);
     }
 
@@ -92,6 +163,12 @@ public class Member {
      * @param amount 차감할 금액
      */
     private void subtractBalance(BigDecimal amount) {
+
+        BigDecimal subtracted = this.balance.subtract(amount);
+        if (BigDecimalUtils.is(subtracted).lessThan(BigDecimal.ZERO)) {
+            throw new BalanceLackException();
+        }
+
         this.balance = this.balance.subtract(amount);
     }
 
