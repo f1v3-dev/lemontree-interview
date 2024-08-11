@@ -1,63 +1,53 @@
-### 1. 회원을 등록합니다.
+### 새로운 회원을 등록합니다.
 
-POST http://localhost:8080/api/member
+POST http://localhost:8080/api/v1/members
 Content-Type: application/json
 
 {
   "name": "정승조",
-  "balance": 100000,
+  "balance": 10000,
   "onceLimit": 5000,
   "dailyLimit": 10000,
   "monthlyLimit": 15000
 }
 
-### 2. 정상적으로 저장되었는지, 회원에 대한 정보를 조회합니다.
+### 정상적으로 저장되었는지, 회원에 대한 정보를 조회합니다.
 
-GET http://localhost:8080/api/member/1
+GET http://localhost:8080/api/v1/members/1
 Content-Type: application/json
 
 
-### 3. 저장된 1번 회원(정승조)이 결제를 진행합니다.
+### 저장된 1번 회원(정승조)이 결제를 진행합니다.
 
-POST http://localhost:8080/api/payment/1
-Content-Type: application/json
-
-{
-  "amount": 1000
-}
-
-### 3-1. 병렬 요청 테스트
-POST http://localhost:8080/api/payment/2
+POST http://localhost:8080/api/v1/members/1/payments
 Content-Type: application/json
 
 {
-  "amount": 1000
+  "paymentAmount": 1000,
+  "paybackAmount": 500
 }
 
-### 4. 존재하지 않는 회원에게 결제를 요청합니다.
+### 위에서 생성된 결제 내역 조회
 
-POST http://localhost:8080/api/payment/100
+GET http://localhost:8080/api/v1/payments/1
 Content-Type: application/json
 
-{
-  "amount": 1000
-}
+### 결제건에 대해 페이백 진행
 
-### 4. 1번 회원에게 1회 한도 이상의 결제를 요청합니다.
-
-POST http://localhost:8080/api/payment/1
+POST http://localhost:8080/api/v1/payments/1/payback
 Content-Type: application/json
 
-{
-  "amount": 5001
-}
+### 결제 취소 요청
 
-### 5. 1번 회원에게 1일 한도 이상의 결제를 요청합니다. (2번 요청)
-
-POST http://localhost:8080/api/payment/1
+DELETE http://localhost:8080/api/v1/members/1/payments/1/cancel
 Content-Type: application/json
 
-{
-  "amount": 5000
-}
+### 결제 취소가 정상적으로 되었는지 조회
 
+GET http://localhost:8080/api/v1/payments/1
+Content-Type: application/json
+
+### 회원 정보 조회
+
+GET http://localhost:8080/api/v1/members/1
+Content-Type: application/json
