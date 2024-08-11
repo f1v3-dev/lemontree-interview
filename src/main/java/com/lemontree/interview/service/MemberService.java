@@ -49,7 +49,7 @@ public class MemberService {
     @Transactional
     public Long createMember(MemberCreate request) {
 
-        checkMemberPreconditions(request);
+        checkValidation(request);
 
         Member member = Member.builder()
                 .name(request.getName())
@@ -85,7 +85,7 @@ public class MemberService {
      *
      * @param request 유저 생성 요청 DTO
      */
-    private void checkMemberPreconditions(MemberCreate request) {
+    private void checkValidation(MemberCreate request) {
         validateBalance(request.getBalance(), request.getBalanceLimit());
         validateLimit(request.getOnceLimit(), request.getDailyLimit(), request.getMonthlyLimit());
     }
@@ -97,13 +97,6 @@ public class MemberService {
      * @param balanceLimit 유저 최대 보유 금액
      */
     private void validateBalance(BigDecimal balance, BigDecimal balanceLimit) {
-        if (BigDecimalUtils.is(balance).lessThan(BigDecimal.ZERO)) {
-            throw new IllegalArgumentException("보유 금액은 0 이상이어야 합니다.");
-        }
-
-        if (BigDecimalUtils.is(balanceLimit).lessThan(BigDecimal.ZERO)) {
-            throw new IllegalArgumentException("최대 보유 금액은 0 이상이어야 합니다.");
-        }
 
         if (BigDecimalUtils.is(balance).greaterThan(balanceLimit)) {
             throw new IllegalArgumentException("보유 금액은 최대 보유 금액보다 작거나 같아야 합니다.");
@@ -118,17 +111,6 @@ public class MemberService {
      * @param monthlyLimit 한 달에 사용할 수 있는 금액
      */
     private void validateLimit(BigDecimal onceLimit, BigDecimal dailyLimit, BigDecimal monthlyLimit) {
-        if (BigDecimalUtils.is(onceLimit).lessThan(BigDecimal.ZERO)) {
-            throw new IllegalArgumentException("한 번에 사용할 수 있는 금액은 0 이상이어야 합니다.");
-        }
-
-        if (BigDecimalUtils.is(dailyLimit).lessThan(BigDecimal.ZERO)) {
-            throw new IllegalArgumentException("하루에 사용할 수 있는 금액은 0 이상이어야 합니다.");
-        }
-
-        if (BigDecimalUtils.is(monthlyLimit).lessThan(BigDecimal.ZERO)) {
-            throw new IllegalArgumentException("한 달에 사용할 수 있는 금액은 0 이상이어야 합니다.");
-        }
 
         if (BigDecimalUtils.is(onceLimit).greaterThan(dailyLimit)) {
             throw new IllegalArgumentException("한 번에 사용할 수 있는 금액은 하루에 사용할 수 있는 금액보다 작거나 같아야 합니다.");
