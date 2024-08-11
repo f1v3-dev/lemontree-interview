@@ -34,4 +34,4 @@
 
 - [요구사항 분석](docs/요구사항_분석.md)
 - [DB Schema](docs/schema.sql)
-- [트러블 슈팅](docs/트러블슈팅.md)
+- [생각 정리](docs/생각정리)
