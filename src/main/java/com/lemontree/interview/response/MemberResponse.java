@@ -17,6 +17,7 @@ public class MemberResponse {
     private final Long memberId;
     private final String name;
     private final BigDecimal balance;
+    private final BigDecimal balanceLimit;
     private final BigDecimal onceLimit;
     private final BigDecimal dailyLimit;
     private final BigDecimal monthlyLimit;
@@ -28,6 +29,7 @@ public class MemberResponse {
         this.memberId = member.getId();
         this.name = member.getName();
         this.balance = member.getBalance();
+        this.balanceLimit = member.getBalanceLimit();
         this.onceLimit = member.getOnceLimit();
         this.dailyLimit = member.getDailyLimit();
         this.monthlyLimit = member.getMonthlyLimit();
