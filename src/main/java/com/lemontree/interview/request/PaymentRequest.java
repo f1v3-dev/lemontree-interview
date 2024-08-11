@@ -2,6 +2,7 @@ package com.lemontree.interview.request;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 
 import java.math.BigDecimal;
@@ -20,6 +21,6 @@ public class PaymentRequest {
     private BigDecimal paymentAmount;
 
     @NotNull(message = "페이백 금액을 입력해주세요.")
-    @Positive(message = "페이백 금액은 0보다 커야합니다.")
+    @PositiveOrZero(message = "페이백 금액을 0원 이상으로 입력해주세요.")
     private BigDecimal paybackAmount;
 }
