@@ -1,4 +1,4 @@
-### 새로운 회원을 등록합니다.
+### 새로운 유저을 등록합니다.
 
 POST http://localhost:8080/api/v1/members
 Content-Type: application/json
@@ -6,18 +6,19 @@ Content-Type: application/json
 {
   "name": "정승조",
   "balance": 10000,
+  "balanceLimit": 100000,
   "onceLimit": 5000,
   "dailyLimit": 10000,
   "monthlyLimit": 15000
 }
 
-### 정상적으로 저장되었는지, 회원에 대한 정보를 조회합니다.
+### 정상적으로 저장되었는지, 유저에 대한 정보를 조회합니다.
 
 GET http://localhost:8080/api/v1/members/1
 Content-Type: application/json
 
 
-### 저장된 1번 회원(정승조)이 결제를 진행합니다.
+### 저장된 1번 유저(정승조)이 결제를 진행합니다.
 
 POST http://localhost:8080/api/v1/members/1/payments
 Content-Type: application/json
