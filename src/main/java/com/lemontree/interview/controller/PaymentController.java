@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * 결제 Controller 클래스입니다.
  *
@@ -25,14 +27,15 @@ public class PaymentController {
      * 회원의 결제 요청 메서드입니다.
      *
      * @param memberId 회원 ID
-     * @return 201 (CREATED)
+     * @return 201 (CREATED), body: 진행된 결제 ID
      */
     @PostMapping("/api/v1/members/{memberId}/payments")
-    public ResponseEntity<Void> requestPayment(@PathVariable("memberId") Long memberId,
-                                               @Valid @RequestBody PaymentRequest request) {
+    public ResponseEntity<Map<String, Long>> requestPayment(@PathVariable("memberId") Long memberId,
+                                                            @Valid @RequestBody PaymentRequest request) {
 
-        paymentService.processPayment(memberId, request);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        Long paymentId = paymentService.processPayment(memberId, request);
+        Map<String, Long> response = Map.of("paymentId", paymentId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**

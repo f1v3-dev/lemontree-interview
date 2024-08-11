@@ -9,6 +9,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * 유저 Controller 클래스입니다.
  *
@@ -28,11 +30,14 @@ public class MemberController {
      * @return 201 (CREATED), body: 생성된 유저 ID
      */
     @PostMapping("/api/v1/members")
-    public ResponseEntity<Long> createMember(@Valid @RequestBody MemberCreate request) {
+    public ResponseEntity<Map<String, Long>> createMember(@Valid @RequestBody MemberCreate request) {
+
+        Long memberId = memberService.createMember(request);
+        Map<String, Long> response = Map.of("memberId", memberId);
 
         return ResponseEntity
                 .status(HttpStatus.CREATED)
-                .body(memberService.createMember(request));
+                .body(response);
     }
 
 
