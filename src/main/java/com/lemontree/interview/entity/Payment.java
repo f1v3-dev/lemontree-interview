@@ -2,8 +2,6 @@ package com.lemontree.interview.entity;
 
 import com.lemontree.interview.enums.PaybackStatus;
 import com.lemontree.interview.enums.PaymentStatus;
-import com.lemontree.interview.exception.payback.PaybackCancelNotAllowedException;
-import com.lemontree.interview.exception.payment.PaymentCancelNotAllowedException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -85,11 +83,6 @@ public class Payment {
      * 결제 취소 요청에 따른 결제 상태 변경
      */
     public void cancelPayment(LocalDateTime now) {
-
-        if (this.paymentStatus != PaymentStatus.DONE) {
-            throw new PaymentCancelNotAllowedException();
-        }
-
         this.paymentStatus = PaymentStatus.CANCEL;
         this.paymentCanceledAt = now;
     }
@@ -106,11 +99,6 @@ public class Payment {
      * 페이백 취소 요청에 따른 페이백 상태 변경
      */
     public void cancelPayback() {
-
-        if (this.paybackStatus != PaybackStatus.DONE) {
-            throw new PaybackCancelNotAllowedException();
-        }
-
         this.paybackStatus = PaybackStatus.CANCEL;
         this.paybackCanceledAt = LocalDateTime.now();
     }

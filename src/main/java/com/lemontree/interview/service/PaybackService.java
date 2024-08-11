@@ -6,6 +6,7 @@ import com.lemontree.interview.enums.PaybackStatus;
 import com.lemontree.interview.enums.PaymentStatus;
 import com.lemontree.interview.exception.member.MemberNotFoundException;
 import com.lemontree.interview.exception.payback.PaybackAlreadyDoneException;
+import com.lemontree.interview.exception.payback.PaybackCancelNotAllowedException;
 import com.lemontree.interview.exception.payback.PaybackNotCompleteException;
 import com.lemontree.interview.exception.payment.PaymentNotCompleteException;
 import com.lemontree.interview.exception.payment.PaymentNotFoundException;
@@ -59,6 +60,11 @@ public class PaybackService {
             Member member = memberRepository.findWithPessimisticLockById(memberId)
                     .orElseThrow(MemberNotFoundException::new);
 
+            // 페이백 금액이 잔액 한도보다 크면 페이백 취소가 불가능합니다.
+            if (BigDecimalUtils.is(member.getBalanceLimit()).greaterThan(paybackAmount)) {
+                throw new PaybackCancelNotAllowedException();
+            }
+
             member.payback(paybackAmount);
         }
 
@@ -91,6 +97,11 @@ public class PaybackService {
             Long memberId = payment.getMemberId();
             Member member = memberRepository.findWithPessimisticLockById(memberId)
                     .orElseThrow(MemberNotFoundException::new);
+
+            // 페이백 금액을 회수해야 하는데 회원이 보유한 금액이 부족하면 페이백 취소가 불가능합니다.
+            if (BigDecimalUtils.is(member.getBalance()).lessThan(paymentAmount)) {
+                throw new PaybackCancelNotAllowedException();
+            }
 
             member.cancelPayback(paymentAmount);
         }

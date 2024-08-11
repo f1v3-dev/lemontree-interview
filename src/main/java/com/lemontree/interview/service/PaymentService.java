@@ -3,7 +3,9 @@ package com.lemontree.interview.service;
 import com.lemontree.interview.entity.Member;
 import com.lemontree.interview.entity.Payment;
 import com.lemontree.interview.enums.PaybackStatus;
+import com.lemontree.interview.enums.PaymentStatus;
 import com.lemontree.interview.exception.member.*;
+import com.lemontree.interview.exception.payment.PaymentNotCompleteException;
 import com.lemontree.interview.exception.payment.PaymentNotFoundException;
 import com.lemontree.interview.exception.payment.PaymentUnauthorizedException;
 import com.lemontree.interview.repository.MemberRepository;
@@ -65,8 +67,9 @@ public class PaymentService {
         Member member = memberRepository.findWithPessimisticLockById(memberId)
                 .orElseThrow(MemberNotFoundException::new);
 
-        // 한도 초과 및 잔액 부족 체크
+        // 한도 초과 및 잔액 부족 체크 후 결제 진행
         checkLimitAndBalance(member, request.getPaymentAmount());
+        member.pay(request.getPaymentAmount());
 
         Payment payment = Payment.builder()
                 .memberId(memberId)
@@ -90,8 +93,8 @@ public class PaymentService {
     /**
      * 결제 취소를 진행합니다. 만약 페이백 정보가 존재한다면, 페이백도 동시에 취소합니다.
      *
-     * @param memberId
-     * @param paymentId
+     * @param memberId  결제 취소를 요청한 유저 ID
+     * @param paymentId 결제 ID
      */
     @Transactional(timeout = 5, isolation = Isolation.REPEATABLE_READ)
     public void cancelPayment(Long memberId, Long paymentId) {
@@ -108,6 +111,10 @@ public class PaymentService {
         // 결제를 한 유저와 결제 취소를 요청한 유저가 같은 유저인지 체크합니다.
         if (!payment.getMemberId().equals(member.getId())) {
             throw new PaymentUnauthorizedException();
+        }
+
+        if (payment.getPaymentStatus() != PaymentStatus.DONE) {
+            throw new PaymentNotCompleteException();
         }
 
         // 페이백도 진행되었을 경우 우선적으로 취소 진행
@@ -139,8 +146,6 @@ public class PaymentService {
             BigDecimal paymentAmount = payment.getPaymentAmount();
             member.decreaseMonthlyAccumulate(paymentAmount);
         }
-
-
     }
 
     /**
@@ -197,12 +202,16 @@ public class PaymentService {
         }
 
         // 잔액 부족 체크
-        if (BigDecimalUtils.is(member.getBalance()).lessThan(amount)) {
+        BigDecimal balance = member.getBalance();
+        if (BigDecimalUtils.is(balance).lessThan(amount)) {
             throw new BalanceLackException();
         }
 
-        // 위의 예외 사항을 모두 만족하였을 경우, 누적 금액(일간, 월간)과 잔액을 갱신합니다.
-        member.pay(amount);
+        // 결제 후 잔액이 음수가 되는지 체크
+        BigDecimal expectedBalance = balance.subtract(amount);
+        if (BigDecimalUtils.is(expectedBalance).lessThan(BigDecimal.ZERO)) {
+            throw new BalanceLackException();
+        }
     }
 
 }
