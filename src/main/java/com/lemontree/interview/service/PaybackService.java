@@ -90,7 +90,7 @@ public class PaybackService {
             Member member = memberRepository.findWithPessimisticLockById(memberId)
                     .orElseThrow(MemberNotFoundException::new);
 
-            member.revokePayback(paymentAmount);
+            member.cancelPayback(paymentAmount);
         }
 
         payment.cancelPayback();

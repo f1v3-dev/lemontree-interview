@@ -1,5 +1,6 @@
 package com.lemontree.interview.entity;
 
+import com.lemontree.interview.exception.member.BalanceLackException;
 import com.lemontree.interview.exception.payment.PaymentCancelNotAllowedException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
@@ -76,24 +77,21 @@ public class Member {
         this.isDeleted = isDeleted != null ? isDeleted : Boolean.FALSE;
     }
 
-
     /**
-     * 유저의 누적 금액과 잔액을 업데이트합니다.
+     * 유저의 잔액에 금액을 추가합니다.
      *
-     * @param amount 결제 금액
+     * @param amount 추가할 금액
      */
-    public void updateAccumulateAndBalance(BigDecimal amount) {
-        updateDailyAccumulate(amount);
-        updateMonthlyAccumulate(amount);
-        updateBalance(amount);
+    private void addBalance(BigDecimal amount) {
+        this.balance = this.balance.add(amount);
     }
 
     /**
-     * 유저의 잔액을 업데이트합니다.
+     * 유저의 잔액에 금액을 차감합니다.
      *
-     * @param amount 차감 금액
+     * @param amount 차감할 금액
      */
-    public void updateBalance(BigDecimal amount) {
+    private void subtractBalance(BigDecimal amount) {
         this.balance = this.balance.subtract(amount);
     }
 
@@ -102,8 +100,17 @@ public class Member {
      *
      * @param amount 결제 금액
      */
-    public void updateDailyAccumulate(BigDecimal amount) {
+    private void addDailyAccumulate(BigDecimal amount) {
         this.dailyAccumulate = this.dailyAccumulate.add(amount);
+    }
+
+    /**
+     * 유저의 일간 누적 금액을 차감합니다.
+     *
+     * @param amount 차감할 금액
+     */
+    public void decreaseDailyAccumulate(BigDecimal amount) {
+        this.dailyAccumulate = this.dailyAccumulate.subtract(amount);
     }
 
     /**
@@ -111,40 +118,67 @@ public class Member {
      *
      * @param amount 결제 금액
      */
-    public void updateMonthlyAccumulate(BigDecimal amount) {
+    private void addMonthlyAccumulate(BigDecimal amount) {
         this.monthlyAccumulate = this.monthlyAccumulate.add(amount);
+    }
+
+    /**
+     * 유저의 월간 누적 금액을 차감합니다.
+     *
+     * @param amount 차감할 금액
+     */
+    public void decreaseMonthlyAccumulate(BigDecimal amount) {
+        this.monthlyAccumulate = this.monthlyAccumulate.subtract(amount);
+    }
+
+
+    /**
+     * 유저의 누적 금액을 올리고, 잔액을 차감합니다.
+     *
+     * @param amount 결제 금액
+     */
+    public void pay(BigDecimal amount) {
+
+        if (this.balance.compareTo(amount) < 0) {
+            throw new BalanceLackException();
+        }
+
+        addDailyAccumulate(amount);
+        addMonthlyAccumulate(amount);
+        subtractBalance(amount);
     }
 
     /**
      * 유저에게 페이백 금액을 지급합니다.
      *
-     * @param paybackAmount 페이백 금액
+     * @param amount 페이백 금액
      */
-    public void payback(BigDecimal paybackAmount) {
-        this.balance = this.balance.add(paybackAmount);
+    public void payback(BigDecimal amount) {
+        addBalance(amount);
     }
 
     /**
      * 결제 취소를 진행합니다.
      *
-     * @param paymentAmount 결제 금액
+     * @param amount 결제 금액
      */
-    public void refund(BigDecimal paymentAmount) {
-        this.balance = this.balance.add(paymentAmount);
+    public void cancelPayment(BigDecimal amount) {
+        addBalance(amount);
     }
 
     /**
      * 페이백 취소를 진행합니다.
      *
-     * @param paybackAmount 페이백 금액
+     * @param amount 페이백 금액
      */
-    public void revokePayback(BigDecimal paybackAmount) {
+    public void cancelPayback(BigDecimal amount) {
 
         // 페이백 금액이 잔액보다 많은 경우, 결제 취소가 불가능합니다.
-        if (this.balance.compareTo(paybackAmount) < 0) {
+        if (this.balance.compareTo(amount) < 0) {
             throw new PaymentCancelNotAllowedException();
         }
 
-        this.balance = this.balance.subtract(paybackAmount);
+        subtractBalance(amount);
     }
+
 }

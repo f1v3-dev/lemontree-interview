@@ -17,8 +17,9 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.YearMonth;
 
 /**
  * 결제 Service 입니다.
@@ -102,50 +103,48 @@ public class PaymentService {
         // 결제 취소 로직
         LocalDateTime now = LocalDateTime.now();
         payment.cancelPayment(now);
-        member.updateBalance(payment.getPaymentAmount());
-
-        // TODO: 결제 취소를 요청한 유저의 누적 금액을 갱신합니다.
+        member.cancelPayment(payment.getPaymentAmount());
 
         // 1. 결제한 일자와 취소하는 일자(오늘)이 같은 날짜인가?
         LocalDateTime approvedAt = payment.getPaymentApprovedAt();
         if (compareDay(now, approvedAt) == 0) {
             // 일간 누적 금액에서 결제 금액을 차감한다.
             BigDecimal paymentAmount = payment.getPaymentAmount();
-            member.updateDailyAccumulate(paymentAmount.negate());
+            member.decreaseDailyAccumulate(paymentAmount);
         }
 
         // 2. 결제한 일자와 취소하는 일자(오늘)이 같은 달인가?
         if (compareMonth(now, approvedAt) == 0) {
             // 월간 누적 금액에서 결제 금액을 차감한다.
             BigDecimal paymentAmount = payment.getPaymentAmount();
-            member.updateMonthlyAccumulate(paymentAmount.negate());
+            member.decreaseMonthlyAccumulate(paymentAmount);
         }
     }
 
     /**
      * 두 날짜의 일자를 비교합니다.
      *
-     * @param aDate 날짜 A
-     * @param bDate 날짜 B
+     * @param aDateTime 날짜 A
+     * @param bDateTime 날짜 B
      * @return 같은 경우 0, aDate가 더 큰 경우 1, bDate가 더 큰 경우 -1
      */
-    private static int compareDay(LocalDateTime aDate, LocalDateTime bDate) {
-        LocalDateTime aDayDate = aDate.truncatedTo(ChronoUnit.DAYS);
-        LocalDateTime bDayDate = bDate.truncatedTo(ChronoUnit.DAYS);
-        return aDayDate.compareTo(bDayDate);
+    private static int compareDay(LocalDateTime aDateTime, LocalDateTime bDateTime) {
+        LocalDate aDate = aDateTime.toLocalDate();
+        LocalDate bDate = bDateTime.toLocalDate();
+        return aDate.compareTo(bDate);
     }
 
     /**
      * 두 날짜의 월을 비교합니다.
      *
-     * @param aDate 날짜 A
-     * @param bDate 날짜 B
+     * @param aDateTime 날짜 A
+     * @param bDateTime 날짜 B
      * @return 같은 경우 0, aDate가 더 큰 경우 1, bDate가 더 큰 경우 -1
      */
-    private static int compareMonth(LocalDateTime aDate, LocalDateTime bDate) {
-        LocalDateTime aMonthDate = aDate.truncatedTo(ChronoUnit.MONTHS);
-        LocalDateTime bMonthDate = bDate.truncatedTo(ChronoUnit.MONTHS);
-        return aMonthDate.compareTo(bMonthDate);
+    private static int compareMonth(LocalDateTime aDateTime, LocalDateTime bDateTime) {
+        YearMonth aYearMonth = YearMonth.from(aDateTime);
+        YearMonth bYearMonth = YearMonth.from(bDateTime);
+        return aYearMonth.compareTo(bYearMonth);
     }
 
 
@@ -181,7 +180,7 @@ public class PaymentService {
         }
 
         // 위의 예외 사항을 모두 만족하였을 경우, 누적 금액(일간, 월간)과 잔액을 갱신합니다.
-        member.updateAccumulateAndBalance(amount);
+        member.pay(amount);
     }
 
 }
