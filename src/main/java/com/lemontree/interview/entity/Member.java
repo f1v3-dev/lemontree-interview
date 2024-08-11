@@ -1,7 +1,7 @@
 package com.lemontree.interview.entity;
 
 import com.lemontree.interview.exception.member.BalanceLackException;
-import com.lemontree.interview.exception.payment.PaymentCancelNotAllowedException;
+import com.lemontree.interview.exception.payback.PaybackCancelNotAllowedException;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -175,7 +175,7 @@ public class Member {
 
         // 페이백 금액이 잔액보다 많은 경우, 결제 취소가 불가능합니다.
         if (this.balance.compareTo(amount) < 0) {
-            throw new PaymentCancelNotAllowedException();
+            throw new PaybackCancelNotAllowedException();
         }
 
         subtractBalance(amount);
