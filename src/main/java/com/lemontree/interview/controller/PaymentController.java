@@ -24,7 +24,7 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     /**
-     * 회원의 결제 요청 메서드입니다.
+     * 회원의 결제건 생성 요청 메서드입니다.
      *
      * @param memberId 회원 ID
      * @return 201 (CREATED), body: 진행된 결제 ID
@@ -33,22 +33,33 @@ public class PaymentController {
     public ResponseEntity<Map<String, Long>> requestPayment(@PathVariable("memberId") Long memberId,
                                                             @Valid @RequestBody PaymentRequest request) {
 
-        Long paymentId = paymentService.processPayment(memberId, request);
+        Long paymentId = paymentService.createPayment(memberId, request);
         Map<String, Long> response = Map.of("paymentId", paymentId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     /**
+     * 결제를 처리하는 메서드입니다.
+     *
+     * @param paymentId 처리할 결제 ID
+     * @return 200 (OK)
+     */
+    @PostMapping("/api/v1/payments/{paymentId}/process")
+    public ResponseEntity<Void> processPayment(@PathVariable("paymentId") Long paymentId) {
+        paymentService.processPayment(paymentId);
+        return ResponseEntity.ok().build();
+    }
+
+
+    /**
      * 결제 취소 메서드입니다.
      *
-     * @param memberId  요청 회원 ID
      * @param paymentId 결제 ID
      * @return 200 (OK)
      */
-    @DeleteMapping("/api/v1/members/{memberId}/payments/{paymentId}/cancel")
-    public ResponseEntity<Void> cancelPayment(@PathVariable("memberId") Long memberId,
-                                              @PathVariable("paymentId") Long paymentId) {
-        paymentService.cancelPayment(memberId, paymentId);
+    @DeleteMapping("/api/v1/payments/{paymentId}/cancel")
+    public ResponseEntity<Void> cancelPayment(@PathVariable("paymentId") Long paymentId) {
+        paymentService.cancelPayment(paymentId);
         return ResponseEntity.ok().build();
     }
 
