@@ -83,6 +83,7 @@ class MemberControllerTest extends AbstractRestDocsTest {
     @DisplayName("유저 조회 테스트")
     void 유저_조회() throws Exception {
 
+        // given
         Member member = Member.builder()
                 .name("정승조")
                 .balance(BigDecimal.valueOf(10000L))
@@ -94,11 +95,8 @@ class MemberControllerTest extends AbstractRestDocsTest {
                 .build();
 
         ReflectionTestUtils.setField(member, "id", 1L);
-
-
         MemberResponse response = new MemberResponse(member);
 
-        // given
         when(memberService.getMember(anyLong())).thenReturn(response);
 
         // expected
