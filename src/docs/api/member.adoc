@@ -1,0 +1,25 @@
+== 유저
+
+=== 유저 생성
+
+.HTTP Request
+include::{snippets}/member-controller-test/유저_생성/http-request.adoc[]
+
+.Request Fields
+include::{snippets}/member-controller-test/유저_생성/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/member-controller-test/유저_생성/http-response.adoc[]
+
+=== 유저 조회
+
+.HTTP Request
+include::{snippets}/member-controller-test/유저_조회/http-request.adoc[]
+
+include::{snippets}/member-controller-test/유저_조회/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/member-controller-test/유저_조회/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/member-controller-test/유저_조회/response-fields.adoc[]
