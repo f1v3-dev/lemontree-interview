@@ -60,8 +60,9 @@ public class PaybackService {
             Member member = memberRepository.findWithPessimisticLockById(memberId)
                     .orElseThrow(MemberNotFoundException::new);
 
-            // 페이백 금액이 잔액 한도보다 크면 페이백 취소가 불가능합니다.
-            if (BigDecimalUtils.is(member.getBalanceLimit()).greaterThan(paybackAmount)) {
+            // 페이백 후 잔액이 한도를 초과하면 페이백이 불가능합니다.
+            BigDecimal addedPayback = member.getBalance().add(paybackAmount);
+            if (BigDecimalUtils.is(addedPayback).greaterThan(member.getBalanceLimit())) {
                 throw new PaybackCancelNotAllowedException();
             }
 
@@ -92,18 +93,18 @@ public class PaybackService {
             throw new PaybackNotCompleteException();
         }
 
-        BigDecimal paymentAmount = payment.getPaymentAmount();
-        if (BigDecimalUtils.is(paymentAmount).greaterThan(BigDecimal.ZERO)) {
+        BigDecimal paybackAmount = payment.getPaybackAmount();
+        if (BigDecimalUtils.is(paybackAmount).greaterThan(BigDecimal.ZERO)) {
             Long memberId = payment.getMemberId();
             Member member = memberRepository.findWithPessimisticLockById(memberId)
                     .orElseThrow(MemberNotFoundException::new);
 
             // 페이백 금액을 회수해야 하는데 회원이 보유한 금액이 부족하면 페이백 취소가 불가능합니다.
-            if (BigDecimalUtils.is(member.getBalance()).lessThan(paymentAmount)) {
+            if (BigDecimalUtils.is(member.getBalance()).lessThan(paybackAmount)) {
                 throw new PaybackCancelNotAllowedException();
             }
 
-            member.cancelPayback(paymentAmount);
+            member.cancelPayback(paybackAmount);
         }
 
         payment.cancelPayback();
