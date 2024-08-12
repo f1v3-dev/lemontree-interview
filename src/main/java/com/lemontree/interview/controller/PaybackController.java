@@ -27,7 +27,7 @@ public class PaybackController {
      * @param paymentId 결제 ID
      * @return 201 (CREATED)
      */
-    @PostMapping("/api/v1/payments/{paymentId}/payback")
+    @PostMapping("/api/v1/payments/{paymentId}/paybacks")
     public ResponseEntity<Void> requestPayback(@PathVariable("paymentId") Long paymentId) {
 
         paybackService.processPayback(paymentId);
@@ -40,7 +40,7 @@ public class PaybackController {
      * @param paymentId 결제 ID
      * @return 200 (OK)
      */
-    @DeleteMapping("/api/v1/payments/{paymentId}/payback")
+    @DeleteMapping("/api/v1/payments/{paymentId}/paybacks")
     public ResponseEntity<Void> cancelPayback(@PathVariable("paymentId") Long paymentId) {
 
         paybackService.cancelPayback(paymentId);
