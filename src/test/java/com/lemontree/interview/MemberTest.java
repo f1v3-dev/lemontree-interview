@@ -3,6 +3,7 @@ package com.lemontree.interview;
 import com.lemontree.interview.entity.Member;
 import com.lemontree.interview.repository.MemberRepository;
 import com.lemontree.interview.service.PaymentService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +32,11 @@ class MemberTest {
     @Autowired
     PaymentService paymentService;
 
+    @AfterEach
+    void tearDown() {
+        memberRepository.deleteAll();
+    }
+
     @Test
     @DisplayName("회원 저장 테스트")
     void 회원_저장_테스트() {
@@ -51,8 +57,6 @@ class MemberTest {
 
         // then
         assertNotNull(savedMember.getId());
-
-        memberRepository.delete(savedMember);
     }
 
 

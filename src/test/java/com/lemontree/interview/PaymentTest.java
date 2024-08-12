@@ -6,6 +6,7 @@ import com.lemontree.interview.repository.PaymentRepository;
 import com.lemontree.interview.request.PaymentRequest;
 import com.lemontree.interview.service.PaymentService;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +41,12 @@ class PaymentTest {
 
     @Autowired
     PaymentRepository paymentRepository;
+
+    @AfterEach
+    void tearDown() {
+        paymentRepository.deleteAll();
+        memberRepository.deleteAll();
+    }
 
     @Test
     @DisplayName("결제 비관적 락 테스트")
