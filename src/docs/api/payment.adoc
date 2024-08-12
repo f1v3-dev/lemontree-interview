@@ -1,0 +1,60 @@
+== 결제
+
+=== 결제 요청 - 성공
+
+.HTTP Request
+include::{snippets}/payment-controller-test/결제_요청_성공/http-request.adoc[]
+
+.Request Fields
+include::{snippets}/payment-controller-test/결제_요청_성공/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/payment-controller-test/결제_요청_성공/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/payment-controller-test/결제_요청_성공/response-fields.adoc[]
+
+=== 결제 요청 - 실패 (결제/페이백 금액 미입력)
+
+.HTTP Request
+include::{snippets}/payment-controller-test/결제_요청_실패_결제금액_미입력/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/payment-controller-test/결제_요청_실패_결제금액_미입력/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/payment-controller-test/결제_요청_실패_결제금액_미입력/response-fields.adoc[]
+
+=== 결제 요청 - 실패 (결제/페이백 금액 음수)
+
+.HTTP Request
+include::{snippets}/payment-controller-test/결제_요청_실패_결제금액_음수/http-request.adoc[]
+
+.HTTP Response
+include::{snippets}/payment-controller-test/결제_요청_실패_결제금액_음수/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/payment-controller-test/결제_요청_실패_결제금액_음수/response-fields.adoc[]
+
+=== 결제 취소
+
+.HTTP Request
+include::{snippets}/payment-controller-test/결제_취소_성공/http-request.adoc[]
+
+include::{snippets}/payment-controller-test/결제_취소_성공/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/payment-controller-test/결제_취소_성공/http-response.adoc[]
+
+=== 결제 조회
+
+.HTTP Request
+include::{snippets}/payment-controller-test/결제_조회_성공/http-request.adoc[]
+
+include::{snippets}/payment-controller-test/결제_조회_성공/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/payment-controller-test/결제_조회_성공/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/payment-controller-test/결제_조회_성공/response-fields.adoc[]
