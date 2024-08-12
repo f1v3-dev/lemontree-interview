@@ -31,15 +31,38 @@ class MemberTest {
     @Autowired
     PaymentService paymentService;
 
-
     @Test
-    @DisplayName("회원 저장 및 Soft Delete 테스트")
-    void test() {
+    @DisplayName("회원 저장 테스트")
+    void 회원_저장_테스트() {
 
         // given
         Member member = Member.builder()
                 .name("정승조")
                 .balance(BigDecimal.valueOf(50000L))
+                .balanceLimit(BigDecimal.valueOf(100000L))
+                .onceLimit(BigDecimal.valueOf(1000L))
+                .dailyLimit(BigDecimal.valueOf(10000L))
+                .monthlyLimit(BigDecimal.valueOf(300000L))
+                .isDeleted(Boolean.FALSE)
+                .build();
+
+        // when
+        Member savedMember = memberRepository.save(member);
+
+        // then
+        assertNotNull(savedMember.getId());
+    }
+
+
+    @Test
+    @DisplayName("회원 저장 및 Soft Delete 테스트")
+    void 회원_저장_및_Soft_delete_테스트() {
+
+        // given
+        Member member = Member.builder()
+                .name("정승조")
+                .balance(BigDecimal.valueOf(50000L))
+                .balanceLimit(BigDecimal.valueOf(100000L))
                 .onceLimit(BigDecimal.valueOf(1000L))
                 .dailyLimit(BigDecimal.valueOf(10000L))
                 .monthlyLimit(BigDecimal.valueOf(300000L))
@@ -61,26 +84,4 @@ class MemberTest {
         Optional<Member> optionalMember = memberRepository.findById(savedMember.getId());
         assertTrue(optionalMember.isEmpty());
     }
-
-    @Test
-    @DisplayName("회원 저장")
-    void test2() {
-
-        // given
-        Member member = Member.builder()
-                .name("정승조")
-                .balance(BigDecimal.valueOf(50000L))
-                .onceLimit(BigDecimal.valueOf(1000L))
-                .dailyLimit(BigDecimal.valueOf(10000L))
-                .monthlyLimit(BigDecimal.valueOf(300000L))
-                .isDeleted(Boolean.FALSE)
-                .build();
-
-        // when
-        Member savedMember = memberRepository.save(member);
-
-        // then
-        assertNotNull(savedMember.getId());
-    }
-
 }
