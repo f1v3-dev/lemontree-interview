@@ -107,9 +107,11 @@ class PaymentServiceTest {
 
         when(memberRepository.existsById(notExistsMemberId)).thenReturn(false);
 
+        PaymentRequest request = new PaymentRequest();
+
         // expected
         assertThrows(MemberNotFoundException.class,
-                () -> paymentService.createPayment(notExistsMemberId, new PaymentRequest()));
+                () -> paymentService.createPayment(notExistsMemberId, request));
     }
 
     @Test
@@ -141,7 +143,7 @@ class PaymentServiceTest {
         // then
         assertEquals(1L, paymentId);
 
-        verify(memberRepository, times(1)).findWithPessimisticLockById(memberId);
+        verify(memberRepository, times(1)).existsById(memberId);
         verify(paymentRepository, times(1)).save(any());
     }
 
@@ -169,7 +171,7 @@ class PaymentServiceTest {
 
         Payment payment = Payment.builder()
                 .memberId(memberId)
-                .paymentAmount(BigDecimal.valueOf(5_000L))
+                .paymentAmount(BigDecimal.valueOf(8_000L))
                 .paybackAmount(BigDecimal.valueOf(1_000L))
                 .build();
 
@@ -212,7 +214,7 @@ class PaymentServiceTest {
 
         Payment payment = Payment.builder()
                 .memberId(memberId)
-                .paymentAmount(BigDecimal.valueOf(8_000L))
+                .paymentAmount(BigDecimal.valueOf(5_000L))
                 .paybackAmount(BigDecimal.valueOf(1_000L))
                 .build();
 
@@ -255,7 +257,7 @@ class PaymentServiceTest {
 
         Payment payment = Payment.builder()
                 .memberId(memberId)
-                .paymentAmount(BigDecimal.valueOf(8_000L))
+                .paymentAmount(BigDecimal.valueOf(5_000L))
                 .paybackAmount(BigDecimal.valueOf(1_000L))
                 .build();
 
@@ -298,7 +300,7 @@ class PaymentServiceTest {
 
         Payment payment = Payment.builder()
                 .memberId(memberId)
-                .paymentAmount(BigDecimal.valueOf(8_000L))
+                .paymentAmount(BigDecimal.valueOf(5_000L))
                 .paybackAmount(BigDecimal.valueOf(1_000L))
                 .build();
 
@@ -340,7 +342,7 @@ class PaymentServiceTest {
 
         Payment payment = Payment.builder()
                 .memberId(memberId)
-                .paymentAmount(BigDecimal.valueOf(8_000L))
+                .paymentAmount(BigDecimal.valueOf(5_000L))
                 .paybackAmount(BigDecimal.valueOf(1_000L))
                 .build();
 
@@ -356,7 +358,7 @@ class PaymentServiceTest {
         assertEquals(1L, paymentId);
 
         verify(memberRepository, times(1)).findWithPessimisticLockById(memberId);
-        verify(paymentRepository, times(1)).save(any());
+        verify(paymentRepository, times(1)).findWithPessimisticLockById(paymentId);
     }
 
     @Test
@@ -366,16 +368,12 @@ class PaymentServiceTest {
         // given
         Long notExistsPaymentId = 1L;
 
-        when(memberRepository.findWithPessimisticLockById(anyLong()))
-                .thenReturn(Optional.of(Member.builder().build()));
-
         when(paymentRepository.findWithPessimisticLockById(notExistsPaymentId))
                 .thenReturn(Optional.empty());
 
         // expected
         assertThrows(PaymentNotFoundException.class,
                 () -> paymentService.cancelPayment(notExistsPaymentId));
-
 
         verify(paymentRepository, times(1)).findWithPessimisticLockById(notExistsPaymentId);
     }

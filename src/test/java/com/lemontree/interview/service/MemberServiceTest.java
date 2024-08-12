@@ -40,7 +40,7 @@ class MemberServiceTest {
 
     @Test
     @DisplayName("유저 생성 - 실패 (잔액이 한도보다 많은 경우)")
-    void 유저_생성_실패_잔액() {
+    void 유저생성_실패_잔액() {
 
         // given
         MemberCreate member = new MemberCreate();
@@ -60,7 +60,7 @@ class MemberServiceTest {
 
     @Test
     @DisplayName("유저 생성 - 실패 (1회 한도가 1일 한도보다 큰 경우)")
-    void 유저_생성_실패_1회1일_한도() {
+    void 유저생성_실패_1회1일_한도() {
 
         // given
         MemberCreate member = new MemberCreate();
@@ -81,7 +81,7 @@ class MemberServiceTest {
 
     @Test
     @DisplayName("유저 생성 - 실패 (1일 한도가 1달 한도보다 큰 경우)")
-    void 유저_생성_실패_1일1달_한도() {
+    void 유저생성_실패_1일1달_한도() {
 
         // given
         MemberCreate member = new MemberCreate();
@@ -101,7 +101,7 @@ class MemberServiceTest {
 
     @Test
     @DisplayName("유저 생성 - 성공")
-    void 유저_생성_성공() {
+    void 유저생성_성공() {
 
         // given
         MemberCreate member = new MemberCreate();
@@ -135,10 +135,13 @@ class MemberServiceTest {
 
     @Test
     @DisplayName("유저 조회 - 실패 (존재하지 않는 유저)")
-    void 유저_조회_실패() {
+    void 유저조회_실패() {
 
         // given
         Long notExistsMemberId = 1L;
+
+        when(memberRepository.findById(notExistsMemberId))
+                .thenReturn(Optional.empty());
 
         // expected
         assertThrows(MemberNotFoundException.class,
@@ -149,7 +152,7 @@ class MemberServiceTest {
 
     @Test
     @DisplayName("유저 조쇠 - 성공")
-    void 유저_조회_성공() {
+    void 유저조회_성공() {
 
         // given
         Long memberId = 1L;
@@ -169,17 +172,17 @@ class MemberServiceTest {
                 .thenReturn(Optional.of(member));
 
         // expected
-        MemberResponse expected = memberService.getMember(memberId);
+        MemberResponse actual = memberService.getMember(memberId);
 
         assertAll(
-                () -> assertEquals(memberId, expected.getMemberId()),
-                () -> assertEquals("정승조", expected.getName()),
-                () -> assertEquals(BigDecimal.valueOf(10_000L), expected.getBalance()),
-                () -> assertEquals(BigDecimal.valueOf(50_000L), expected.getBalanceLimit()),
-                () -> assertEquals(BigDecimal.valueOf(5_000L), expected.getOnceLimit()),
-                () -> assertEquals(BigDecimal.valueOf(10_000L), expected.getDailyLimit()),
-                () -> assertEquals(BigDecimal.valueOf(30_000L), expected.getMonthlyLimit()),
-                () -> assertFalse(expected.getIsDeleted())
+                () -> assertEquals(memberId, actual.getMemberId()),
+                () -> assertEquals("정승조", actual.getName()),
+                () -> assertEquals(BigDecimal.valueOf(10_000L), actual.getBalance()),
+                () -> assertEquals(BigDecimal.valueOf(50_000L), actual.getBalanceLimit()),
+                () -> assertEquals(BigDecimal.valueOf(5_000L), actual.getOnceLimit()),
+                () -> assertEquals(BigDecimal.valueOf(10_000L), actual.getDailyLimit()),
+                () -> assertEquals(BigDecimal.valueOf(30_000L), actual.getMonthlyLimit()),
+                () -> assertFalse(actual.getIsDeleted())
         );
     }
 }
