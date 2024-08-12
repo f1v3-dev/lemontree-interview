@@ -51,6 +51,8 @@ class MemberTest {
 
         // then
         assertNotNull(savedMember.getId());
+
+        memberRepository.delete(savedMember);
     }
 
 
