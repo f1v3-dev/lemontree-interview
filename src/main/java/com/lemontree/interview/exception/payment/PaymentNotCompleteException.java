@@ -10,7 +10,7 @@ import com.lemontree.interview.exception.GeneralException;
  */
 public class PaymentNotCompleteException extends GeneralException {
 
-    private static final String MESSAGE = "결제가 완료되지 않았습니다.";
+    private static final String MESSAGE = "결제가 완료 상태가 아닙니다.";
 
     public PaymentNotCompleteException() {
         super(MESSAGE);

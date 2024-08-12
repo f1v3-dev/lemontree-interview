@@ -10,7 +10,7 @@ import com.lemontree.interview.exception.GeneralException;
  */
 public class PaymentAlreadyProceedException extends GeneralException {
 
-    private static final String MESSAGE = "이미 결제가 진행중인 결제건입니다.";
+    private static final String MESSAGE = "이미 결제가 진행된 결제건입니다.";
 
     public PaymentAlreadyProceedException() {
         super(MESSAGE);
