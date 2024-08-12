@@ -1,0 +1,19 @@
+== 페이백
+
+=== 페이백 요청
+
+.HTTP Request
+include::{snippets}/payback-controller-test/페이백_요청_성공/http-request.adoc[]
+include::{snippets}/payback-controller-test/페이백_요청_성공/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/payback-controller-test/페이백_요청_성공/http-response.adoc[]
+
+=== 페이백 취소 요청
+
+.HTTP Request
+include::{snippets}/payback-controller-test/페이백_취소_성공/http-request.adoc[]
+include::{snippets}/payback-controller-test/페이백_취소_성공/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/payback-controller-test/페이백_취소_성공/http-response.adoc[]
