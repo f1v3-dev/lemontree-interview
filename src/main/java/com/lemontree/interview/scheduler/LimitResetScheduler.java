@@ -42,19 +42,4 @@ public class LimitResetScheduler {
             log.error("월간 한도 초기화에 실패하였습니다. [{}]", e.getMessage());
         }
     }
-
-    /**
-     * 30초 마다 한도를 초기화합니다.
-     */
-    @Scheduled(cron = "*/30 * * * * *", zone = "Asia/Seoul")
-    public void resetLimit() {
-
-        log.info("1분 스케줄러 실행");
-
-        try {
-            memberService.resetDailyLimit();
-        } catch (Exception e) {
-            log.error("한도 초기화에 실패하였습니다.", e);
-        }
-    }
 }
