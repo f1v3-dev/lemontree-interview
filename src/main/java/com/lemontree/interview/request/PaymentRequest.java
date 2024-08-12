@@ -17,7 +17,7 @@ import java.math.BigDecimal;
 public class PaymentRequest {
 
     @NotNull(message = "결제 금액을 입력해주세요.")
-    @Positive(message = "결제 금액은 0보다 커야합니다.")
+    @Positive(message = "결제 금액을 0원 이상으로 입력해주세요.")
     private BigDecimal paymentAmount;
 
     @NotNull(message = "페이백 금액을 입력해주세요.")
