@@ -7,6 +7,7 @@ import com.lemontree.interview.request.PaymentRequest;
 import com.lemontree.interview.service.PaymentService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,23 @@ class PaymentTest {
     @Autowired
     PaymentRepository paymentRepository;
 
+    Member savedMember;
+
+    @BeforeEach
+    void setUp() {
+        Member member = Member.builder()
+                .name("정승조")
+                .balance(BigDecimal.valueOf(10_000L))
+                .balanceLimit(BigDecimal.valueOf(100_000L))
+                .onceLimit(BigDecimal.valueOf(5_000L))
+                .dailyLimit(BigDecimal.valueOf(1_0000L))
+                .monthlyLimit(BigDecimal.valueOf(15_000L))
+                .isDeleted(Boolean.FALSE)
+                .build();
+
+        savedMember = memberRepository.save(member);
+    }
+
     @AfterEach
     void tearDown() {
         paymentRepository.deleteAll();
@@ -49,30 +67,21 @@ class PaymentTest {
     }
 
     @Test
-    @DisplayName("결제 비관적 락 테스트")
+    @DisplayName("결제 비관적 락 테스트 - 100번 동시에 결제해도 1번만 결제된다.")
     void payment_lock() throws Exception {
 
-        Member member = Member.builder()
-                .name("정승조")
-                .balance(BigDecimal.valueOf(10000L))
-                .balanceLimit(BigDecimal.valueOf(100000L))
-                .onceLimit(BigDecimal.valueOf(5000L))
-                .dailyLimit(BigDecimal.valueOf(10000L))
-                .monthlyLimit(BigDecimal.valueOf(15000L))
-                .isDeleted(Boolean.FALSE)
-                .build();
-
-        Member savedMember = memberRepository.save(member);
 
         // 5000원 결제 요청
         PaymentRequest paymentRequest = new PaymentRequest();
-        ReflectionTestUtils.setField(paymentRequest, "paymentAmount", BigDecimal.valueOf(5000L));
-        ReflectionTestUtils.setField(paymentRequest, "paybackAmount", BigDecimal.valueOf(1000L));
+        ReflectionTestUtils.setField(paymentRequest, "paymentAmount", BigDecimal.valueOf(500L));
+        ReflectionTestUtils.setField(paymentRequest, "paybackAmount", BigDecimal.valueOf(10L));
+
+        Long paymentId = paymentService.createPayment(savedMember.getId(), paymentRequest);
 
         // 동시에 결제를 진행하는 테스트
         AtomicInteger success = new AtomicInteger(0);
         AtomicInteger fail = new AtomicInteger(0);
-        int threadCount = 10;
+        int threadCount = 100;
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
         CountDownLatch startLatch = new CountDownLatch(1);  // 모든 스레드가 동시에 시작하도록 조정하는 용도
@@ -82,7 +91,7 @@ class PaymentTest {
             executorService.execute(() -> {
                 try {
                     startLatch.await();  // 모든 스레드가 준비되길 기다림
-                    paymentService.processPayment(savedMember.getId(), paymentRequest);
+                    paymentService.processPayment(paymentId);
                     success.incrementAndGet();
                 } catch (Exception e) {
                     fail.incrementAndGet();
@@ -92,49 +101,101 @@ class PaymentTest {
             });
         }
 
-        // 모든 스레드가 준비되면 startLatch 해제하여 동시에 시작하게 함
         startLatch.countDown();
-
-
-        // 모든 스레드가 작업을 마칠 때까지 기다림
         latch.await();
 
         // then
         Member findMember = memberRepository.findById(savedMember.getId()).get();
-        assertEquals(0, findMember.getBalance().compareTo(BigDecimal.valueOf(5000L)));
-        assertEquals(0, findMember.getDailyAccumulate().compareTo(BigDecimal.valueOf(5000L)));
-        assertEquals(0, findMember.getMonthlyAccumulate().compareTo(BigDecimal.valueOf(5000L)));
+        assertEquals(0, findMember.getBalance().compareTo(BigDecimal.valueOf(9_500L)));
+        assertEquals(0, findMember.getDailyAccumulate().compareTo(BigDecimal.valueOf(500L)));
+        assertEquals(0, findMember.getMonthlyAccumulate().compareTo(BigDecimal.valueOf(500L)));
 
-        log.info("success count = {}", success.intValue());
-        log.info("fail count = {}", fail.intValue());
+        assertEquals(1, success.intValue());
+        assertEquals(99, fail.intValue());
         assertEquals(threadCount, success.intValue() + fail.intValue());
     }
 
     @Test
-    @DisplayName("결제 취소 테스트")
-    void cancel_payment() {
+    @DisplayName("결제 비관적 락 테스트 - 1000번 동시에 결제해도 1번만 결제된다.")
+    void payment_lock2() throws Exception {
 
-        Member member = Member.builder()
-                .name("정승조")
-                .balance(BigDecimal.valueOf(10000L))
-                .balanceLimit(BigDecimal.valueOf(100000L))
-                .onceLimit(BigDecimal.valueOf(5000L))
-                .dailyLimit(BigDecimal.valueOf(10000L))
-                .monthlyLimit(BigDecimal.valueOf(15000L))
-                .isDeleted(Boolean.FALSE)
-                .build();
+        PaymentRequest paymentRequest = new PaymentRequest();
+        ReflectionTestUtils.setField(paymentRequest, "paymentAmount", BigDecimal.valueOf(5L));
+        ReflectionTestUtils.setField(paymentRequest, "paybackAmount", BigDecimal.valueOf(1L));
 
-        Member savedMember = memberRepository.save(member);
+        Long paymentId = paymentService.createPayment(savedMember.getId(), paymentRequest);
+
+        AtomicInteger success = new AtomicInteger(0);
+        AtomicInteger fail = new AtomicInteger(0);
+        int threadCount = 1000;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            executorService.execute(() -> {
+                try {
+                    startLatch.await();
+                    paymentService.processPayment(paymentId);
+                    success.incrementAndGet();
+                } catch (Exception e) {
+                    fail.incrementAndGet();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        startLatch.countDown();
+        latch.await();
+
+
+        assertEquals(1, success.intValue());
+        assertEquals(threadCount - 1, fail.intValue());
+        assertEquals(threadCount, success.intValue() + fail.intValue());
+
+        executorService.shutdown();
+    }
+
+    @Test
+    @DisplayName("결제 취소 락 테스트 - 동시에 1000번 취소해도 1번만 취소된다.")
+    void cancel_payment() throws InterruptedException {
 
         // 500원 결제 요청
         PaymentRequest paymentRequest = new PaymentRequest();
         ReflectionTestUtils.setField(paymentRequest, "paymentAmount", BigDecimal.valueOf(500L));
         ReflectionTestUtils.setField(paymentRequest, "paybackAmount", BigDecimal.valueOf(100L));
 
-        Long paymentId = paymentService.processPayment(savedMember.getId(), paymentRequest);
+        Long paymentId = paymentService.createPayment(savedMember.getId(), paymentRequest);
 
-        // 결제 취소
-        paymentService.cancelPayment(savedMember.getId(), paymentId);
+        paymentService.processPayment(paymentId);
+
+        AtomicInteger success = new AtomicInteger(0);
+        AtomicInteger fail = new AtomicInteger(0);
+        int threadCount = 1000;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            executorService.execute(() -> {
+                try {
+                    startLatch.await();
+                    paymentService.cancelPayment(paymentId);
+                    success.incrementAndGet();
+                } catch (Exception e) {
+                    fail.incrementAndGet();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        startLatch.countDown();
+        latch.await();
+
 
         // then
         Member findMember = memberRepository.findById(savedMember.getId()).get();
@@ -142,5 +203,7 @@ class PaymentTest {
         assertEquals(0, findMember.getDailyAccumulate().compareTo(BigDecimal.ZERO));
         assertEquals(0, findMember.getMonthlyAccumulate().compareTo(BigDecimal.ZERO));
 
+        assertEquals(1, success.intValue());
+        assertEquals(threadCount - 1, fail.intValue());
     }
 }

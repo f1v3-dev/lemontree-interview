@@ -2,6 +2,7 @@ package com.lemontree.interview.controller;
 
 import com.lemontree.interview.config.AbstractRestDocsTest;
 import com.lemontree.interview.entity.Payment;
+import com.lemontree.interview.exception.member.MemberNotFoundException;
 import com.lemontree.interview.request.PaymentRequest;
 import com.lemontree.interview.response.PaymentResponse;
 import com.lemontree.interview.service.PaymentService;
@@ -37,19 +38,18 @@ class PaymentControllerTest extends AbstractRestDocsTest {
     PaymentService paymentService;
 
     @Test
-    @DisplayName("결제 요청 - 성공")
-    void 결제_요청_성공() throws Exception {
+    @DisplayName("결제건 생성 요청 - 성공")
+    void 결제건생성_요청_성공() throws Exception {
 
         // given
         Long memberId = 1L;
 
         PaymentRequest request = new PaymentRequest();
-        ReflectionTestUtils.setField(request, "paymentAmount", BigDecimal.valueOf(10000L));
-        ReflectionTestUtils.setField(request, "paybackAmount", BigDecimal.valueOf(1000L));
+        ReflectionTestUtils.setField(request, "paymentAmount", BigDecimal.valueOf(10_000L));
+        ReflectionTestUtils.setField(request, "paybackAmount", BigDecimal.valueOf(1_000L));
         String json = objectMapper.writeValueAsString(request);
 
-        when(paymentService.processPayment(anyLong(), any()))
-                .thenReturn(1L);
+        when(paymentService.createPayment(anyLong(), any())).thenReturn(1L);
 
         // expected
         mockMvc.perform(post("/api/v1/members/{memberId}/payments", memberId)
@@ -70,8 +70,40 @@ class PaymentControllerTest extends AbstractRestDocsTest {
                                 fieldWithPath("paymentId").description("완료된 결제 ID")
                         )
                 ));
+    }
 
+    @Test
+    @DisplayName("결제건 생성 요청 - 실패 (존재하지 않는 유저)")
+    void 결제건생성_요청_실패_존재하지않는유저() throws Exception {
 
+        // given
+        Long notExistsMemberId = 10L;
+
+        PaymentRequest request = new PaymentRequest();
+        ReflectionTestUtils.setField(request, "paymentAmount", BigDecimal.valueOf(10_000L));
+        ReflectionTestUtils.setField(request, "paybackAmount", BigDecimal.valueOf(1_000L));
+        String json = objectMapper.writeValueAsString(request);
+
+        when(paymentService.createPayment(anyLong(), any()))
+                .thenThrow(new MemberNotFoundException());
+
+        // expected
+        mockMvc.perform(post("/api/v1/members/{memberId}/payments", notExistsMemberId)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpectAll(
+                        status().isNotFound(),
+                        jsonPath("$.status").value("NOT_FOUND"),
+                        jsonPath("$.message").value("해당 유저를 찾을 수 없습니다."))
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("memberId").description("결제 요청 유저 ID")),
+                        responseFields(
+                                fieldWithPath("status").description("에러 상태"),
+                                fieldWithPath("message").description("에러 메시지"),
+                                fieldWithPath("validation").description("유효성 검사 오류")
+                        )
+                ));
     }
 
     @Test
