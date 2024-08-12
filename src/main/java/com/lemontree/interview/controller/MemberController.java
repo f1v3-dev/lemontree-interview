@@ -35,11 +35,8 @@ public class MemberController {
         Long memberId = memberService.createMember(request);
         Map<String, Long> response = Map.of("memberId", memberId);
 
-        return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(response);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
-
 
     /**
      * 유저 조회 메서드입니다.
@@ -51,5 +48,4 @@ public class MemberController {
     public ResponseEntity<MemberResponse> getMember(@PathVariable("memberId") Long memberId) {
         return ResponseEntity.ok(memberService.getMember(memberId));
     }
-
 }
