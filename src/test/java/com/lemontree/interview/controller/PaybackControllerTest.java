@@ -33,7 +33,7 @@ class PaybackControllerTest extends AbstractRestDocsTest {
     @DisplayName("페이백 요청 - 성공")
     void 페이백_요청_성공() throws Exception {
 
-        mockMvc.perform(post("/api/v1/payments/{paymentId}/payback", 1L)
+        mockMvc.perform(post("/api/v1/payments/{paymentId}/paybacks", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andDo(restDocs.document(
@@ -49,7 +49,7 @@ class PaybackControllerTest extends AbstractRestDocsTest {
     @DisplayName("페이백 취소 - 성공")
     void 페이백_취소_성공() throws Exception {
 
-        mockMvc.perform(delete("/api/v1/payments/{paymentId}/payback", 1L)
+        mockMvc.perform(delete("/api/v1/payments/{paymentId}/paybacks", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andDo(restDocs.document(

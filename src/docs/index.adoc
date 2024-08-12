@@ -1,0 +1,48 @@
+= API 문서
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 5
+:seclinks:
+
+== API 구성
+
+아래와 같이 유저, 결제, 페이백 API를 제공합니다.
+
+=== 유저 API
+
+[source]
+----
+POST /api/v1/members            // 유저 생성
+GET /api/v1/members/{memberId}  // 유저 조회
+----
+
+=== 결제 API
+
+[source]
+----
+POST /api/v1/members/{memberId}/payments                        // 결제 요청
+DELETE /api/v1/members/{memberId}/payments/{paymentId}/cancel   // 결제 취소
+GET /api/v1/payments/{paymentId}                                // 결제 조회
+
+----
+
+=== 페이백 API
+
+[source]
+----
+POST /api/v1/payments/{paymentId}/paybacks                  // 페이백 요청
+DELETE /api/v1/payments/{paymentId}/paybacks/{paybackId}    // 페이백 취소
+----
+
+'''
+
+= API
+:sectnums:
+
+include::api/member.adoc[]
+
+include::api/payment.adoc[]
+
+include::api/payback.adoc[]
