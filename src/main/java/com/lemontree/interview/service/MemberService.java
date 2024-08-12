@@ -1,7 +1,10 @@
 package com.lemontree.interview.service;
 
 import com.lemontree.interview.entity.Member;
+import com.lemontree.interview.exception.member.BalanceExceededException;
+import com.lemontree.interview.exception.member.DailyLimitExceedsMonthlyLimitException;
 import com.lemontree.interview.exception.member.MemberNotFoundException;
+import com.lemontree.interview.exception.member.OnceLimitExceedsDailyLimitException;
 import com.lemontree.interview.repository.MemberRepository;
 import com.lemontree.interview.request.MemberCreate;
 import com.lemontree.interview.response.MemberResponse;
@@ -99,7 +102,7 @@ public class MemberService {
     private void validateBalance(BigDecimal balance, BigDecimal balanceLimit) {
 
         if (BigDecimalUtils.is(balance).greaterThan(balanceLimit)) {
-            throw new IllegalArgumentException("보유 금액은 최대 보유 금액보다 작거나 같아야 합니다.");
+            throw new BalanceExceededException();
         }
     }
 
@@ -113,11 +116,11 @@ public class MemberService {
     private void validateLimit(BigDecimal onceLimit, BigDecimal dailyLimit, BigDecimal monthlyLimit) {
 
         if (BigDecimalUtils.is(onceLimit).greaterThan(dailyLimit)) {
-            throw new IllegalArgumentException("한 번에 사용할 수 있는 금액은 하루에 사용할 수 있는 금액보다 작거나 같아야 합니다.");
+            throw new OnceLimitExceedsDailyLimitException();
         }
 
         if (BigDecimalUtils.is(dailyLimit).greaterThan(monthlyLimit)) {
-            throw new IllegalArgumentException("하루에 사용할 수 있는 금액은 한 달에 사용할 수 있는 금액보다 작거나 같아야 합니다.");
+            throw new DailyLimitExceedsMonthlyLimitException();
         }
     }
 }
