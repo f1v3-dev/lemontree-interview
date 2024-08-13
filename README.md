@@ -497,13 +497,13 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
 
 #### 기존 방식
 
-- Entity Class 생성하기 전, precondition 을 통해 검사를 진행
+- Entity 인스턴스 생성하기 전, precondition 을 통해 검사를 진행
 - 생성자 내부에서 검사를 진행하여, 객체 생성 시점에 오류를 잡음
 
 #### 접근 방법 및 변경
 
 - `Fail Fast` 원칙을 따르려면, Entity 객체를 생성하기 전에 Service Layer 에서 검사를 진행하고 예외를 던지는 것이 맞지 않을까?
-- 비즈니스 로직을 처리하는 레이어인 Service Layer 에서 Entity Class 생성이 가능한지 체크하는 방식으로 변경
+- 비즈니스 로직을 처리하는 레이어인 Service Layer 에서 Entity 인스턴스 생성이 가능한지 체크하는 방식으로 변경
 
 <br/>
 
