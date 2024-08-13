@@ -20,7 +20,7 @@ Content-Type: application/json
 
 ### 저장된 1번 유저(정승조)의 결제건을 생성합니다.
 
-POST http://localhost:8080/api/v1/members/1/payments
+POST http://localhost:8080/api/v1/members/1/trades
 Content-Type: application/json
 
 {
@@ -30,22 +30,22 @@ Content-Type: application/json
 
 ### 위에서 생성된 결제 내역 조회
 
-GET http://localhost:8080/api/v1/payments/1
+GET http://localhost:8080/api/v1/trades/1
 Content-Type: application/json
 
 ### 생성된 결제건의 결제를 진행
 
-POST http://localhost:8080/api/v1/payments/1/process
+POST http://localhost:8080/api/v1/trades/1/payments
 Content-Type: application/json
 
 ### 결제건에 대해 페이백 진행
 
-POST http://localhost:8080/api/v1/payments/1/paybacks
+POST http://localhost:8080/api/v1/trades/1/paybacks
 Content-Type: application/json
 
 ### 결제 취소 요청
 
-DELETE http://localhost:8080/api/v1/payments/1/cancel
+DELETE http://localhost:8080/api/v1/trades/1/payments
 Content-Type: application/json
 
 ### 결제 취소가 정상적으로 되었는지 조회
