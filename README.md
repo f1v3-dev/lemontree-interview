@@ -12,6 +12,8 @@
     - [핵심 요구사항](#핵심-요구사항)
     - [데이터베이스 설계](#데이터베이스-설계)
 - [생각 정리](#생각-정리)
+- [동시성 테스트 (고민 거리)](#과연-내-코드는-내-의도대로-동시성-문제에-대응하고-있을까)
+- [느낀점](#느낀점)
 
 ## 요구사항
 
@@ -56,7 +58,7 @@
 - H2 (Test)
 - JUnit 5
 - Spring REST Docs (API 문서화)
-    - [이미지 파일](docs/API_문서.png)
+    - [이미지 파일](docs/img/API_문서.png)
     - WEB 문서는 `mvn clean package` 후 `localhost:8080/index.html` 접속
 
 ---
@@ -92,28 +94,30 @@
 
 #### 거래 (결제/페이백)
 
-- 중복 요청을 하는 상황 등 어떤 상황에서든 결제는 **1건당 1회!**
-- 결제 실패시 **어느 시점**에서 실패했는지 파악 가능하게
-- 결제와 페이백은 `1:1 관계`라고 생각하였지만, 하나의 테이블에 저장하도록 진행
-    - @OneToOne 연관관계를 사용할 수도 있지만, LAZY Loading이 안되는 점, 조회의 편의성 등을 고려하였습니다.
-- 또한, 회원의 정보는 ID만 저장하고, Entity Mapping 없이 진행
+> `거래(trade)`를 중요한 객체로 보고, `결제(payment)`와 `페이백(payback)`에 대한 정보를 가지고 있게 설계하였습니다.
+
+- 중복 요청을 하는 상황 등 어떤 상황에서든 거래는 **1건당 1회!**
+- 오류 발생시 **어느 시점**에서 실패했는지 파악 가능하게
 
 #### 나의 접근 방법
 
+- 거래와 결제, 페이백이 각각 `1:1 관계`로 매핑할 수 있지만, 거래 하나의 테이블에 저장도록 진행
+    - **@OneToOne** 연관관계를 사용할 수도 있지만, LAZY Loading이 안되는 점, 조회의 편의성 등을 고려하였습니다.
+    - 또한, 트랜잭션 하나의 단위로 묶기 위해 하나의 테이블에 저장
 - 높은 격리 수준(**REPEATABLE READ**)을 사용
 - `Lock` 을 사용하여 접근 권한을 제한하는 방식 사용
 - 결제/페이백 시스템에서 `동시성 제어`가 가장 핵심적으로 판단
 - 격리 수준과 락에 따른 **trade-off (dead lock)** 대응 방법은?
 
-> **'결제 후 페이백을 진행한다.'**
-> 1. 클라이언트가 결제 API 호출을 하면 서버 내부적으로 페이백까지 한 트랜잭션으로 처리
-> 2. **클라이언트가 결제 API 호출 후 정상 응답일 경우 페이백 API 호출** &larr; 이 방식으로 이해하고 진행하였습니다.
+> **거래의 흐름도**
+> 1. 클라이언트가 거래 요청 (결제 금액, 페이백 금액 정보를 함께 전달)
+> 2. 결제를 원하는 경우, 결제 API 호출
+> 3. 완료된 결제인 경우, 페이백 API를 호출하여 페이백을 진행할 수 있음.
 
 #### 결제
 
 - 결제 금액만큼 유저의 보유 금액(`balance`)을 차감합니다.
 - 또한, 누적 금액에 결제 금액을 더합니다.
-- 결제를 요청할 때 결제 금액과 페이백 금액을 함께 요청합니다.
 
 _예외 사항_
 
@@ -140,7 +144,7 @@ _특이 사항_
 
 - 페이백 완료 상태
     - 결제 취소 시 페이백이 완료된 상태라면 페이백 취소도 같이 진행합니다.
-    - 이 과정에서의 문제점이 존재하여 [생각 정리 - 결제 취소와 페이백 취소](#생각-정리)에 기록 (해결하지 못하였습니다.)
+    - 이 과정에서의 문제점이 존재하여 [생각 정리 - 결제 취소와 페이백 취소](#결제-취소와-페이백-취소---미해결)에 기록 (동일 트랜잭션으로 보는게 맞는가?)
 
 #### 페이백
 
@@ -170,8 +174,6 @@ _특이 사항_
 
 - 페이백 금액이 0원 이상인 경우에만 유저 보유 금액을 차감
 
----
-
 <br/>
 
 ### 데이터베이스 설계
@@ -182,8 +184,7 @@ _특이 사항_
 
 > 분석한 요구사항을 토대로 ERD를 작성하였습니다.
 
-- 결제와 페이백의 경우 1:1 관계라고 생각하여 ERD 내에선 두 테이블로 분리하였지만, 실제 데이터베이스에서는 한 개의 테이블로 구성하였습니다.
-- 특히, `JPA Entity` 의 특성상 @OneToOne 연관 관계는 LAZY Loading이 되지 않는다는 점, 조회의 편의성 등을 고려하여 한 개의 테이블로 구성하였습니다.
+- 결제와 페이백의 경우 1:1 관계라고 생각하여 ERD 내에선 두 테이블로 분리하였지만, 실제 데이터베이스에서는 한 개의 테이블 (거래, trade) 로 구성하였습니다.
 
 #### DB Schema
 
@@ -276,7 +277,8 @@ spring.datasource.hikari.maximum-pool-size=15
 
 > maximum-pool-size 와 minimum-idle 수를 일치시켜 최대한 높은 성능을 낼 수 있도록 설정하였습니다.
 
----
+
+<br/>
 
 ## 생각 정리
 
@@ -296,6 +298,30 @@ spring.datasource.hikari.maximum-pool-size=15
 성능적 측면에서 무거운 객체를 사용한다는 점은 문제가 되지만, '돈'과 관련된 API에선 정확성이 최우선이라고 판단
 
 ### 누적 금액 초기화 (JPQL)
+
+**Spring Scheduling Task** 를 사용하여 누적 금액 초기화를 진행하였습니다.
+
+_Scheduler 테스트_
+
+![daily_scheduler.png](docs/img/daily_scheduler.png)
+
+12시에 dailyAccumulate 초기화
+
+```json
+{
+  "memberId": 1,
+  "name": "정승조",
+  "balance": 94000,
+  "onceLimit": 5000,
+  "dailyLimit": 10000,
+  "monthlyLimit": 15000,
+  "dailyAccumulate": 0,
+  "monthlyAccumulate": 6000,
+  "isDeleted": false
+}
+```
+
+**유저 누적 금액 초기화 메서드**
 
 ```java
 public interface MemberRepository extends JpaRepository<Member, Long> {
@@ -341,7 +367,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
 그렇다면 어떤 격리 수준과 락을 사용해야 할까?
 
-### 격리 수준
+#### 격리 수준
 
 > SERIALIZABLE 격리 수준은 성능이 상당히 떨어지기 때문에 '극단적'으로 안전한 상황에만 사용하라 했는데?..
 
@@ -354,13 +380,13 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
 그렇다면, REPEATABLE READ / SERIALIZABLE 둘 중 어느 격리 수준을 선택해야 할까?
 
-#### REPEATABLE READ
+**REPEATABLE READ**
 
 - MySQL의 기본 격리 수준이며, 트랜잭션이 롤백될 가능성에 대비하여 변경 전 레코드를 Undo 영역에 저장
 - 동일한 트랜잭션 내에서는 동일한 결과를 보장하지만, 다른 트랜잭션의 경우 팬텀 리드가 발생할 수 있다.
 - 하지만, **InnoDB**를 사용하는 경우에는 REPEATABLE READ 격리 수준에서 팬텀 리드가 발생하지 않는다. (일반적인 SELECT 쿼리 한정)
 
-#### SERIALIZABLE
+**SERIALIZABLE**
 
 - 가장 단순하고, 엄격한 격리 수준이다.
 - 한 트랜잭션에서 읽고 쓰는 레코드를 다른 트랜잭션에서 **절대** 접근할 수 없다.
@@ -376,7 +402,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
 Java의 synchronized 키워드를 사용하는 것처럼 exclusive lock 같은 방식으로 동시성 문제를 제어할 수는 없을까?
 
-#### 낙관적 락(Optimistic Lock)
+**낙관적 락(Optimistic Lock)**
 
 - 낙관적 락은 데이터를 조회할 때 다른 트랜잭션에서 수정하지 않을 것이라고 가정한다.
 - `@Version` 어노테이션이나, `@Lock(LockModeType.OPTIMISTIC)` 과 같은 방식으로 Java 에서 구현할 수 있다.
@@ -387,7 +413,7 @@ _정리하자면,_
 - 데이터를 업데이트 할 때 버전을 체크하여 충돌 여부를 판단해야 함.
 - 동시에 같은 데이터를 변경하려는 경우가 적은 상황에서 사용하는 것이 적합한 것 같다.
 
-#### 비관적 락(Pessimistic Lock)
+**비관적 락(Pessimistic Lock)**
 
 - 데이터를 조회할 때 부터 락을 걸어 다른 트랜잭션에서 접근할 수 없게 한다.
 - `@Lock(LockModeType.PESSIMISTIC_WRITE)` 와 같은 방식으로 Java 에서 구현할 수 있다.
@@ -402,25 +428,6 @@ _정리하자면,_
 
 현재의 요구사항을 대입해보자면, 비관적 락을 사용하여 유저가 결제/페이백을 진행할 때 동시에 접근하지 못하도록 막는 것이 적합하다고 판단했습니다.   
 따라서, `비관적 락(Pessimitic Lock)` 을 사용하여 동시성 문제를 해결하였습니다.
-
-### @Transactional 어노테이션
-
-#### 1. timeout
-
-![img.png](docs/img/timeout.png)
-
-- 거래 실행은 5초의 제한 시간이 주어진다.
-- 높은 격리 수준과 락을 사용하여 데드락이 발생할 수 있는데, 이를 timeout 설정을 통해 방지할 수 있음.
-
-![img.png](docs/img/timeout2.png)
-시간이 경과하였을 경우 TransactionException 발생!
-
-#### 2. 동시성 제어 (Isolation, Lock)
-
-![img.png](docs/img/isolation.png)
-
-- 동일한 결제/취소가 중복해서 일어날 수 있다.
-- **REPEATABLE READ** 격리 수준과 **비관적 락(Pessimistic)** 을 사용하여 동시성 제어
 
 _MemberRepository.java_
 
@@ -455,30 +462,6 @@ public interface PaymentRepository extends JpaRepository<Payment, Long> {
     Optional<Payment> findWithPessimisticLockById(Long paymentId);
 }
 
-```
-
-> 결제와 페이백 적립을 같은 트랜잭션으로 묶는게 맞을까?
-
-### Spring Scheduling Task
-
-_Scheduler 테스트_
-
-![daily_scheduler.png](docs/img/daily_scheduler.png)
-
-12시에 dailyAccumulate 초기화
-
-```json
-{
-  "memberId": 1,
-  "name": "정승조",
-  "balance": 94000,
-  "onceLimit": 5000,
-  "dailyLimit": 10000,
-  "monthlyLimit": 15000,
-  "dailyAccumulate": 0,
-  "monthlyAccumulate": 6000,
-  "isDeleted": false
-}
 ```
 
 ### 결제 취소와 페이백 취소 - 미해결
@@ -521,7 +504,7 @@ _Scheduler 테스트_
 - `Fail Fast` 원칙을 따르려면, Entity 객체를 생성하기 전에 Service Layer 에서 검사를 진행하고 예외를 던지는 것이 맞지 않을까?
 - 비즈니스 로직을 처리하는 레이어인 Service Layer 에서 Entity Class 생성이 가능한지 체크하는 방식으로 변경
 
----
+<br/>
 
 ## 과연 내 코드는 내 의도대로 동시성 문제에 대응하고 있을까?
 
@@ -543,7 +526,6 @@ _Scheduler 테스트_
 - 유저가 여러 번 결제를 요청해도 단 한 번만 결제가 이루어져야 한다.
 - 이 말은 즉, 유저의 잔액이 여러 번 차감되어서는 안된다는 것을 의미한다.
 
-
 ### 2. 동시성 이슈 대응
 
 - Service Layer 에 `@Transactional` 어노테이션을 통해 트랜잭션을 관리함.
@@ -552,6 +534,7 @@ _Scheduler 테스트_
 _PaymentService.java - 결제 요청 메서드_
 
 ```java
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -608,7 +591,8 @@ public class PaymentService {
 _테스트1. 10번의 시도 - 성공_
 
 ```java
-    @Test
+
+@Test
 @DisplayName("결제 비관적 락 테스트 - 10번 동시에 결제해도 1번만 결제된다.")
 void payment_lock() throws Exception {
 
@@ -669,6 +653,7 @@ void payment_lock() throws Exception {
     assertEquals(threadCount, success.intValue() + fail.intValue());
 }
 ```
+
 **테스트코드 설명**
 
 - 10개의 스레드를 사용하여 동시에 한 회원이 5000원 결제를 10번 요청한다.
@@ -685,7 +670,7 @@ _테스트2. 100번의 시도 - 실패_
 
 - 현재 프로젝트에서는 Connection Pool (HikariCP)를 사용하여 미리 사용할 커넥션을 가지고 있음
 - 지정해놓은 커넥션 수를 초과하는 요청이 들어오면, 대기열에 들어가서 순차적으로 처리됨
-  - 백그라운드 스레드가 10개라고 가정하면, 100번의 요청을 보냈을 때 11번째 스레드가 커넥션 풀에 접근하려고 하면 대기열에 들어가게 됨
+    - 백그라운드 스레드가 10개라고 가정하면, 100번의 요청을 보냈을 때 11번째 스레드가 커넥션 풀에 접근하려고 하면 대기열에 들어가게 됨
 - 나머지 스레드들은 커넥션이 반환되기만을 기다리고 있음.
 - 커넥션 풀의 크기에 따라 동시에 처리할 수 있는 스레드 수가 제한되어 있음.
 - 테스트 결과, 커넥션 풀의 크기가 50개가 넘어갈 경우, 같은 수의 스레드가 요청해도 오류가 발생함.
@@ -693,6 +678,7 @@ _테스트2. 100번의 시도 - 실패_
 #### 예상 해결 방안
 
 ```java
+
 @Lock(LockModeType.PESSIMISTIC_WRITE)
 Optional<Member> findWithPessimisticLockById(@Param("id") Long id);
 ```
@@ -701,13 +687,13 @@ Optional<Member> findWithPessimisticLockById(@Param("id") Long id);
 
 ![img.png](docs/img/pessimistic_write.png)
 
-
 ### 접근 방식 변경
 
 - 유저가 결제를 요청하는 방식에서, 유저가 결제건을 미리 만들고 이후에 결제를 진행하는 방식으로 변경
 - 해당 방식을 사용하여 비관적 락 + 상태 체크를 통해 동시성 문제를 해결하는 방식으로 진행
 
-기존 방식에서는 결제 요청이 들어오면 같은 트랜잭션 내에서 결제 대기(WAIT) 상태 -> 결제 완료(DONE) 상태로 변경하는 방식으로 진행했는데 해당 방식은 좋지 않은 코드인 것 같아 리팩토링을 진행하였습니다.  
+기존 방식에서는 결제 요청이 들어오면 같은 트랜잭션 내에서 결제 대기(WAIT) 상태 -> 결제 완료(DONE) 상태로 변경하는 방식으로 진행했는데 해당 방식은 좋지 않은 코드인 것 같아 리팩토링을
+진행하였습니다.  
 또한, 비관적 락을 걸었지만, 동일한 결제건이라는 것을 파악할 수 있는 방법이 존재하지 않아 동시성 문제를 해결하기 어려웠습니다.
 
 ### 변경된 방식
@@ -715,6 +701,7 @@ Optional<Member> findWithPessimisticLockById(@Param("id") Long id);
 _PaymentService.java - 결제 요청 메서드_
 
 ```java
+
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -782,9 +769,31 @@ public class PaymentService {
 - 결제건을 생성하면, 생성된 결제 ID를 반환한다.
 - 결제를 진행하는 메서드에서 `비관적 락` 을 사용하여 결제를 조회하고, 결제 상태가 `WAIT` 인지 확인한다.
 
-
 ![img.png](docs/img/concurrency_success.png)
 
 1000번의 요청에도 1건의 성공만 되도록 동시성 문제를 해결!
 
 > 결제(취소)와 페이백(취소) 로직도 동일한 방식으로 변경하여 동시성 문제를 해결하였습니다.
+
+### 더 나아가서,
+
+- 커넥션 풀은 데이터베이스의 접근의 동시성을 관리하며, 애플리케이션 확장성을 향상시킨다.
+- 하지만, 동시에 처리할 수 있는 요청의 수는 제한되어 있어 동시성 문제를 완벽하게 대응할 수는 없는 것 같다.
+
+더 찾아보니, Redis Java Client 중 하나인 Redisson의 RLock을 활용하여 `분산 락`을 구현할 수 있다고 한다.
+
+- MySQL도 분산락을 구현할 수 있지만, 락을 자동으로 반납하지 않는 점, DB에서 락을 관리하기 때문에 여전히 부담이 됨
+- Lock을 사용하여, DB에 큰 부하를 주는 방식을 현재 사용하고 있기 떄문에, 분산 락을 구현한다면 더 나은 성능을 낼 수 있을 것 같다.
+
+> [내가 알고있는 Lettuce, Jedis 가 아닌 Redisson 을 사용하는 이유](https://helloworld.kurly.com/blog/distributed-redisson-lock/#2-redis%EC%9D%98-redisson-%EB%9D%BC%EC%9D%B4%EB%B8%8C%EB%9F%AC%EB%A6%AC-%EC%84%A0%EC%A0%95-%EC%9D%B4%EC%9C%A0)
+
+<br/>
+
+## 느낀점
+
+격리 수준, 락, 커넥션 풀 등의 기법을 적절히 활용하여 동시성 제어를 진행했지만, 여전히 완벽한 코드는 아닌 것 같다는 생각이 든다.
+
+- 데이터 일관성, 무결성을 유지하기위해 경합 조건, 데드락, 성능 저하, 상태 관리 등의 문제를 생각해보는 계기가 됨.
+- 처음으로 동시성 문제를 고려하면서 설계를 진행하다보니, 코드를 작성한 후 리팩토링을 진행하면서 더 나은 방법을 찾아보는 것이 중요하다는 것을 느낌.
+- 접근한 방법과 해결 방법을 스스로 생각하고, 단순히 돌아가는 코드가 아닌 '더 좋은 방법은 없을까?'에 대해 계속 고민하게 됨.
+
