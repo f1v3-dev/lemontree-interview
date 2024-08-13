@@ -2,7 +2,6 @@ package com.lemontree.interview.controller;
 
 import com.lemontree.interview.service.PaybackService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,13 +24,13 @@ public class PaybackController {
      * 완료된 결제건에 대해 페이백을 요청하는 메서드입니다.
      *
      * @param tradeId 거래 ID
-     * @return 201 (CREATED)
+     * @return 200 (OK)
      */
     @PostMapping("/api/v1/trades/{tradeId}/paybacks")
     public ResponseEntity<Void> requestPayback(@PathVariable("tradeId") Long tradeId) {
 
         paybackService.processPayback(tradeId);
-        return ResponseEntity.status(HttpStatus.CREATED).build();
+        return ResponseEntity.ok().build();
     }
 
     /**
@@ -44,6 +43,6 @@ public class PaybackController {
     public ResponseEntity<Void> cancelPayback(@PathVariable("tradeId") Long tradeId) {
 
         paybackService.cancelPayback(tradeId);
-        return ResponseEntity.status(HttpStatus.OK).build();
+        return ResponseEntity.ok().build();
     }
 }
