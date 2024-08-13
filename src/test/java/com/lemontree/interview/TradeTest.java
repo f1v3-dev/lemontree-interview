@@ -4,6 +4,7 @@ import com.lemontree.interview.entity.Member;
 import com.lemontree.interview.repository.MemberRepository;
 import com.lemontree.interview.repository.TradeRepository;
 import com.lemontree.interview.request.TradeRequest;
+import com.lemontree.interview.service.PaybackService;
 import com.lemontree.interview.service.PaymentService;
 import com.lemontree.interview.service.TradeService;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +47,9 @@ class TradeTest {
 
     @Autowired
     TradeService tradeService;
+
+    @Autowired
+    PaybackService paybackService;
 
     Member savedMember;
 
@@ -207,6 +211,99 @@ class TradeTest {
         assertEquals(0, findMember.getBalance().compareTo(BigDecimal.valueOf(10000L)));
         assertEquals(0, findMember.getDailyAccumulate().compareTo(BigDecimal.ZERO));
         assertEquals(0, findMember.getMonthlyAccumulate().compareTo(BigDecimal.ZERO));
+
+        assertEquals(1, success.intValue());
+        assertEquals(threadCount - 1, fail.intValue());
+    }
+
+    @Test
+    @DisplayName("동일 거래의 페이백을 1000번 요청해도 1번만 성공한다.")
+    void payback() throws InterruptedException {
+
+        TradeRequest paymentRequest = new TradeRequest();
+        ReflectionTestUtils.setField(paymentRequest, "paymentAmount", BigDecimal.valueOf(500L));
+        ReflectionTestUtils.setField(paymentRequest, "paybackAmount", BigDecimal.valueOf(100L));
+
+        Long tradeId = tradeService.requestTrade(savedMember.getId(), paymentRequest);
+
+        paymentService.processPayment(tradeId);
+
+        AtomicInteger success = new AtomicInteger(0);
+        AtomicInteger fail = new AtomicInteger(0);
+        int threadCount = 1000;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            executorService.execute(() -> {
+                try {
+                    startLatch.await();
+                    paybackService.processPayback(tradeId);
+                    success.incrementAndGet();
+                } catch (Exception e) {
+                    fail.incrementAndGet();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        startLatch.countDown();
+        latch.await();
+
+
+        // then
+        Member findMember = memberRepository.findById(savedMember.getId()).get();
+        assertEquals(0, findMember.getBalance().compareTo(BigDecimal.valueOf(9_600L)));
+
+        assertEquals(1, success.intValue());
+        assertEquals(threadCount - 1, fail.intValue());
+    }
+
+    @Test
+    @DisplayName("페이백 취소를 1000번 요청해도 1번만 성공한다.")
+    void cancel_payback() throws InterruptedException {
+
+        TradeRequest paymentRequest = new TradeRequest();
+        ReflectionTestUtils.setField(paymentRequest, "paymentAmount", BigDecimal.valueOf(500L));
+        ReflectionTestUtils.setField(paymentRequest, "paybackAmount", BigDecimal.valueOf(100L));
+
+        Long tradeId = tradeService.requestTrade(savedMember.getId(), paymentRequest);
+
+        paymentService.processPayment(tradeId);
+        paybackService.processPayback(tradeId);
+
+        AtomicInteger success = new AtomicInteger(0);
+        AtomicInteger fail = new AtomicInteger(0);
+        int threadCount = 1000;
+
+        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch startLatch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+
+        for (int i = 0; i < threadCount; i++) {
+            executorService.execute(() -> {
+                try {
+                    startLatch.await();
+                    paybackService.cancelPayback(tradeId);
+                    success.incrementAndGet();
+                } catch (Exception e) {
+                    fail.incrementAndGet();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        startLatch.countDown();
+        latch.await();
+
+
+        // then
+        Member findMember = memberRepository.findById(savedMember.getId()).get();
+        assertEquals(0, findMember.getBalance().compareTo(BigDecimal.valueOf(9_500L)));
 
         assertEquals(1, success.intValue());
         assertEquals(threadCount - 1, fail.intValue());
