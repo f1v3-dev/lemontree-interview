@@ -1,17 +1,15 @@
 package com.lemontree.interview.service;
 
 import com.lemontree.interview.entity.Member;
-import com.lemontree.interview.entity.Payment;
+import com.lemontree.interview.entity.Trade;
 import com.lemontree.interview.enums.PaybackStatus;
 import com.lemontree.interview.enums.PaymentStatus;
 import com.lemontree.interview.exception.member.*;
-import com.lemontree.interview.exception.payment.PaymentAlreadyProceedException;
+import com.lemontree.interview.exception.payment.PaymentAlreadyDoneException;
 import com.lemontree.interview.exception.payment.PaymentNotCompleteException;
-import com.lemontree.interview.exception.payment.PaymentNotFoundException;
+import com.lemontree.interview.exception.trade.TradeNotFoundException;
 import com.lemontree.interview.repository.MemberRepository;
-import com.lemontree.interview.repository.PaymentRepository;
-import com.lemontree.interview.request.PaymentRequest;
-import com.lemontree.interview.response.PaymentResponse;
+import com.lemontree.interview.repository.TradeRepository;
 import com.lemontree.interview.util.BigDecimalUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,7 +23,7 @@ import java.time.LocalDateTime;
 import java.time.YearMonth;
 
 /**
- * 결제 Service 입니다.
+ * 결제 Service 클래스 입니다.
  *
  * @author 정승조
  * @version 2024. 08. 07.
@@ -36,88 +34,49 @@ import java.time.YearMonth;
 public class PaymentService {
 
     private final PaybackService paybackService;
-    private final PaymentRepository paymentRepository;
+    private final TradeRepository tradeRepository;
     private final MemberRepository memberRepository;
 
-    /**
-     * 결제 정보를 조회합니다.
-     *
-     * @param paymentId 결제 ID
-     * @return 결제 응답 정보
-     */
-    @Transactional(readOnly = true)
-    public PaymentResponse getPayment(Long paymentId) {
-        Payment payment = paymentRepository.findById(paymentId)
-                .orElseThrow(PaymentNotFoundException::new);
-
-        return new PaymentResponse(payment);
-    }
-
-
-    /**
-     * 결제건을 생성합니다. (결제가 진행되는 것이 아닌, 진행해야되는 결제건을 생성합니다.)
-     *
-     * @param memberId 결제를 진행할 유저 ID
-     * @param request  결제 요청 정보
-     * @return 결제 ID
-     */
-    @Transactional
-    public Long createPayment(Long memberId, PaymentRequest request) {
-
-        if (!memberRepository.existsById(memberId)) {
-            throw new MemberNotFoundException();
-        }
-
-        Payment payment = Payment.builder()
-                .memberId(memberId)
-                .paymentAmount(request.getPaymentAmount())
-                .paybackAmount(request.getPaybackAmount())
-                .build();
-
-        Payment savedPayment = paymentRepository.save(payment);
-
-        return savedPayment.getId();
-    }
 
     /**
      * 결제를 진행합니다. 이 때, 비관적 락을 사용하여 멤버 정보를 조회하고 결제를 진행합니다.
      *
-     * @param paymentId 결제 ID
+     * @param tradeId 거래 ID
      */
     @Transactional(timeout = 5, isolation = Isolation.REPEATABLE_READ)
-    public void processPayment(Long paymentId) {
+    public void processPayment(Long tradeId) {
 
-        // 비관적 락을 사용하여 결제 정보를 조회합니다. (결제 상태 및 결제 금액 변경을 막기 위함)
-        Payment payment = paymentRepository.findWithPessimisticLockById(paymentId)
-                .orElseThrow(PaymentNotFoundException::new);
+        // 비관적 락을 사용하여 거래 정보를 조회합니다. (결제 상태 및 결제 금액 변경을 막기 위함)
+        Trade trade = tradeRepository.findWithPessimisticLockById(tradeId)
+                .orElseThrow(TradeNotFoundException::new);
 
         // 비관적 락을 사용하여 멤버 정보를 조회합니다. (잔액 변경을 막기 위함)
-        Member member = memberRepository.findWithPessimisticLockById(payment.getMemberId())
+        Member member = memberRepository.findWithPessimisticLockById(trade.getMemberId())
                 .orElseThrow(MemberNotFoundException::new);
 
-        if (payment.getPaymentStatus() != PaymentStatus.WAIT) {
-            throw new PaymentAlreadyProceedException();
+        if (trade.getPaymentStatus() != PaymentStatus.WAIT) {
+            throw new PaymentAlreadyDoneException();
         }
 
-        checkLimitAndBalance(member, payment.getPaymentAmount());
-        member.pay(payment.getPaymentAmount());
+        checkLimitAndBalance(member, trade.getPaymentAmount());
+        member.pay(trade.getPaymentAmount());
 
-        payment.completePayment();
-        log.info("결제가 완료되었습니다. [결제 ID = {}]", payment.getId());
+        trade.completePayment();
+        log.info("결제가 완료되었습니다. [결제 ID = {}]", trade.getId());
     }
 
 
     /**
      * 결제 취소를 진행합니다. 만약 페이백 정보가 존재한다면, 페이백도 동시에 취소합니다.
      *
-     * @param paymentId 결제 ID
+     * @param tradeId 거래 ID
      */
     @Transactional(timeout = 5, isolation = Isolation.REPEATABLE_READ)
-    public void cancelPayment(Long paymentId) {
+    public void cancelPayment(Long tradeId) {
 
-        // 비관적 락을 사용하여 결제 정보 조회 (결제 상태를 다른 트랜잭션에서 변경하지 못하도록)
-        Payment payment = paymentRepository.findWithPessimisticLockById(paymentId)
-                .orElseThrow(PaymentNotFoundException::new);
+        // 비관적 락을 사용하여 거래 정보 조회 (결제 상태를 다른 트랜잭션에서 변경하지 못하도록)
+        Trade payment = tradeRepository.findWithPessimisticLockById(tradeId)
+                .orElseThrow(TradeNotFoundException::new);
 
         // 비관적 락을 사용하여 회원 정보 조회 (유저 잔액 수정을 막아야 함.)
         Member member = memberRepository.findWithPessimisticLockById(payment.getMemberId())
@@ -131,9 +90,9 @@ public class PaymentService {
         if (payment.getPaybackStatus() == PaybackStatus.DONE) {
             // TODO: 여기서 오류가 발생한다고 하더라도 결제 취소는 진행되어야 합니다. (미구현)
             try {
-                paybackService.cancelPayback(paymentId);
+                paybackService.cancelPayback(tradeId);
             } catch (Exception e) {
-                log.error("페이백 취소 중 오류가 발생하였습니다. [결제 ID = {}]", paymentId, e);
+                log.error("페이백 취소 중 오류가 발생하였습니다. [결제 ID = {}]", tradeId, e);
             }
         }
 
@@ -154,7 +113,7 @@ public class PaymentService {
             member.decreaseMonthlyAccumulate(paymentAmount);
         }
 
-        log.info("결제 취소가 완료되었습니다. [결제 ID = {}]", paymentId);
+        log.info("결제 취소가 완료되었습니다. [결제 ID = {}]", tradeId);
     }
 
 
