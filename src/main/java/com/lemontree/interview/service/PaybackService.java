@@ -1,7 +1,7 @@
 package com.lemontree.interview.service;
 
 import com.lemontree.interview.entity.Member;
-import com.lemontree.interview.entity.Payment;
+import com.lemontree.interview.entity.Trade;
 import com.lemontree.interview.enums.PaybackStatus;
 import com.lemontree.interview.enums.PaymentStatus;
 import com.lemontree.interview.exception.member.MemberNotFoundException;
@@ -9,9 +9,9 @@ import com.lemontree.interview.exception.payback.PaybackAlreadyDoneException;
 import com.lemontree.interview.exception.payback.PaybackCancelNotAllowedException;
 import com.lemontree.interview.exception.payback.PaybackNotCompleteException;
 import com.lemontree.interview.exception.payment.PaymentNotCompleteException;
-import com.lemontree.interview.exception.payment.PaymentNotFoundException;
+import com.lemontree.interview.exception.trade.TradeNotFoundException;
 import com.lemontree.interview.repository.MemberRepository;
-import com.lemontree.interview.repository.PaymentRepository;
+import com.lemontree.interview.repository.TradeRepository;
 import com.lemontree.interview.util.BigDecimalUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 
 /**
- * 페이백 Service 입니다.
+ * 페이백 Service 클래스 입니다.
  *
  * @author 정승조
  * @version 2024. 08. 10.
@@ -32,7 +32,7 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class PaybackService {
 
-    private final PaymentRepository paymentRepository;
+    private final TradeRepository paymentRepository;
     private final MemberRepository memberRepository;
 
     /**
@@ -43,8 +43,8 @@ public class PaybackService {
     @Transactional(timeout = 5, isolation = Isolation.REPEATABLE_READ)
     public void processPayback(Long paymentId) {
 
-        Payment payment = paymentRepository.findWithPessimisticLockById(paymentId)
-                .orElseThrow(PaymentNotFoundException::new);
+        Trade payment = paymentRepository.findWithPessimisticLockById(paymentId)
+                .orElseThrow(TradeNotFoundException::new);
 
         if (payment.getPaymentStatus() != PaymentStatus.DONE) {
             throw new PaymentNotCompleteException();
@@ -82,8 +82,8 @@ public class PaybackService {
     @Transactional(timeout = 5, isolation = Isolation.REPEATABLE_READ)
     public void cancelPayback(Long paymentId) {
 
-        Payment payment = paymentRepository.findWithPessimisticLockById(paymentId)
-                .orElseThrow(PaymentNotFoundException::new);
+        Trade payment = paymentRepository.findWithPessimisticLockById(paymentId)
+                .orElseThrow(TradeNotFoundException::new);
 
         if (payment.getPaymentStatus() != PaymentStatus.DONE) {
             throw new PaymentNotCompleteException();

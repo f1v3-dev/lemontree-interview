@@ -18,9 +18,9 @@ CREATE TABLE `member`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4;
 
-CREATE TABLE `payment`
+CREATE TABLE `trade`
 (
-    payment_id          BIGINT AUTO_INCREMENT PRIMARY KEY,
+    trade_id            BIGINT AUTO_INCREMENT PRIMARY KEY,
     member_id           BIGINT         NOT NULL,
     payment_amount      DECIMAL(12, 0) NOT NULL,
     payment_status      VARCHAR(10)    NOT NULL,

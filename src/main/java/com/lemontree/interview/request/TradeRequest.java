@@ -8,13 +8,13 @@ import lombok.Getter;
 import java.math.BigDecimal;
 
 /**
- * 머니 결제 API 요청 클래스입니다.
+ * 거래 요청 정보입니다.
  *
  * @author 정승조
  * @version 2024. 08. 07.
  */
 @Getter
-public class PaymentRequest {
+public class TradeRequest {
 
     @NotNull(message = "결제 금액을 입력해주세요.")
     @Positive(message = "결제 금액을 0원 이상으로 입력해주세요.")

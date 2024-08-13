@@ -8,11 +8,11 @@ import com.lemontree.interview.exception.GeneralException;
  * @author 정승조
  * @version 2024. 08. 13.
  */
-public class PaymentAlreadyProceedException extends GeneralException {
+public class PaymentAlreadyDoneException extends GeneralException {
 
     private static final String MESSAGE = "이미 결제가 진행된 결제건입니다.";
 
-    public PaymentAlreadyProceedException() {
+    public PaymentAlreadyDoneException() {
         super(MESSAGE);
     }
 
