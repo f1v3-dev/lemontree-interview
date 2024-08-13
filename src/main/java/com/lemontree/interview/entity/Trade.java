@@ -12,24 +12,24 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * 결제 Entity 입니다.
+ * 거래 Entity 입니다.
  *
  * @author 정승조
  * @version 2024. 08. 07.
  */
 @Getter
 @Entity
-@Table(name = "payment",
+@Table(name = "trade",
         indexes = {
                 @Index(name = "idx_payment_member_id", columnList = "member_id")
         }
 )
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Payment {
+public class Trade {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "payment_id")
+    @Column(name = "trade_id")
     private Long id;
 
     @Column(nullable = false, name = "member_id")
@@ -39,14 +39,14 @@ public class Payment {
     private BigDecimal paymentAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "VARCHAR(10)", name = "payment_status")
+    @Column(nullable = false, name = "payment_status", columnDefinition = "VARCHAR(10)")
     private PaymentStatus paymentStatus;
 
     @Column(nullable = false, name = "payback_amount")
     private BigDecimal paybackAmount;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, columnDefinition = "VARCHAR(10)", name = "payback_status")
+    @Column(nullable = false, name = "payback_status", columnDefinition = "VARCHAR(10)")
     private PaybackStatus paybackStatus;
 
     @Column(nullable = true, name = "payment_approved_at")
@@ -62,7 +62,7 @@ public class Payment {
     private LocalDateTime paybackCanceledAt;
 
     @Builder
-    public Payment(Long memberId, BigDecimal paymentAmount, BigDecimal paybackAmount) {
+    public Trade(Long memberId, BigDecimal paymentAmount, BigDecimal paybackAmount) {
         this.memberId = memberId;
         this.paymentAmount = paymentAmount;
         this.paymentStatus = PaymentStatus.WAIT;
