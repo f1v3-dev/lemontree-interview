@@ -50,7 +50,7 @@ Content-Type: application/json
 
 ### 결제 취소가 정상적으로 되었는지 조회
 
-GET http://localhost:8080/api/v1/payments/1
+GET http://localhost:8080/api/v1/trades/1
 Content-Type: application/json
 
 ### 회원 정보 조회
