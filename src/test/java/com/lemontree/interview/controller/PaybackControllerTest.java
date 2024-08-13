@@ -40,7 +40,7 @@ class PaybackControllerTest extends AbstractRestDocsTest {
 
         mockMvc.perform(post("/api/v1/trades/{tradeId}/paybacks", 1L)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andDo(restDocs.document(
                         pathParameters(
                                 parameterWithName("tradeId").description("거래 ID")
