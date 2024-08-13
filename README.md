@@ -191,7 +191,7 @@ _특이 사항_
 ```sql
 -- DB: lemontree
 
-DROP TABLE IF EXISTS payment;
+DROP TABLE IF EXISTS trade;
 DROP TABLE IF EXISTS member;
 
 CREATE TABLE `member`
