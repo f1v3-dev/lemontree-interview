@@ -32,18 +32,18 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class PaybackService {
 
-    private final TradeRepository paymentRepository;
+    private final TradeRepository tradeRepository;
     private final MemberRepository memberRepository;
 
     /**
      * 페이백 처리를 진행합니다.
      *
-     * @param paymentId 결제 ID
+     * @param tradeId 거래 ID
      */
     @Transactional(timeout = 5, isolation = Isolation.REPEATABLE_READ)
-    public void processPayback(Long paymentId) {
+    public void processPayback(Long tradeId) {
 
-        Trade payment = paymentRepository.findWithPessimisticLockById(paymentId)
+        Trade payment = tradeRepository.findWithPessimisticLockById(tradeId)
                 .orElseThrow(TradeNotFoundException::new);
 
         if (payment.getPaymentStatus() != PaymentStatus.DONE) {
@@ -77,25 +77,25 @@ public class PaybackService {
     /**
      * 페이백 취소를 진행합니다.
      *
-     * @param paymentId 결제 ID
+     * @param tradeId 거래 ID
      */
     @Transactional(timeout = 5, isolation = Isolation.REPEATABLE_READ)
-    public void cancelPayback(Long paymentId) {
+    public void cancelPayback(Long tradeId) {
 
-        Trade payment = paymentRepository.findWithPessimisticLockById(paymentId)
+        Trade trade = tradeRepository.findWithPessimisticLockById(tradeId)
                 .orElseThrow(TradeNotFoundException::new);
 
-        if (payment.getPaymentStatus() != PaymentStatus.DONE) {
+        if (trade.getPaymentStatus() != PaymentStatus.DONE) {
             throw new PaymentNotCompleteException();
         }
 
-        if (payment.getPaybackStatus() != PaybackStatus.DONE) {
+        if (trade.getPaybackStatus() != PaybackStatus.DONE) {
             throw new PaybackNotCompleteException();
         }
 
-        BigDecimal paybackAmount = payment.getPaybackAmount();
+        BigDecimal paybackAmount = trade.getPaybackAmount();
         if (BigDecimalUtils.is(paybackAmount).greaterThan(BigDecimal.ZERO)) {
-            Long memberId = payment.getMemberId();
+            Long memberId = trade.getMemberId();
             Member member = memberRepository.findWithPessimisticLockById(memberId)
                     .orElseThrow(MemberNotFoundException::new);
 
@@ -107,9 +107,8 @@ public class PaybackService {
             member.cancelPayback(paybackAmount);
         }
 
-        payment.cancelPayback();
-
-        log.info("페이백 취소가 완료되었습니다. [결제 ID = {}]", payment.getId());
+        trade.cancelPayback();
+        log.info("페이백 취소가 완료되었습니다. [결제 ID = {}]", trade.getId());
 
         // throw new RuntimeException("상위 트랜잭션이 roll-back 되는 문제가 존재함");
     }
