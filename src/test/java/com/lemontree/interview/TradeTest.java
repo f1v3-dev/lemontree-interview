@@ -2,9 +2,10 @@ package com.lemontree.interview;
 
 import com.lemontree.interview.entity.Member;
 import com.lemontree.interview.repository.MemberRepository;
-import com.lemontree.interview.repository.PaymentRepository;
-import com.lemontree.interview.request.PaymentRequest;
+import com.lemontree.interview.repository.TradeRepository;
+import com.lemontree.interview.request.TradeRequest;
 import com.lemontree.interview.service.PaymentService;
+import com.lemontree.interview.service.TradeService;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
- * Integration testing for Payment.
+ * 거래 통합 테스트입니다.
  *
  * @author 정승조
  * @version 2024. 08. 07.
@@ -32,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 @Slf4j
 @ActiveProfiles("test")
 @SpringBootTest
-class PaymentTest {
+class TradeTest {
 
     @Autowired
     MemberRepository memberRepository;
@@ -41,9 +42,13 @@ class PaymentTest {
     PaymentService paymentService;
 
     @Autowired
-    PaymentRepository paymentRepository;
+    TradeRepository paymentRepository;
+
+    @Autowired
+    TradeService tradeService;
 
     Member savedMember;
+
 
     @BeforeEach
     void setUp() {
@@ -72,11 +77,11 @@ class PaymentTest {
 
 
         // 5000원 결제 요청
-        PaymentRequest paymentRequest = new PaymentRequest();
+        TradeRequest paymentRequest = new TradeRequest();
         ReflectionTestUtils.setField(paymentRequest, "paymentAmount", BigDecimal.valueOf(500L));
         ReflectionTestUtils.setField(paymentRequest, "paybackAmount", BigDecimal.valueOf(10L));
 
-        Long paymentId = paymentService.createPayment(savedMember.getId(), paymentRequest);
+        Long tradeId = tradeService.requestTrade(savedMember.getId(), paymentRequest);
 
         // 동시에 결제를 진행하는 테스트
         AtomicInteger success = new AtomicInteger(0);
@@ -91,7 +96,7 @@ class PaymentTest {
             executorService.execute(() -> {
                 try {
                     startLatch.await();  // 모든 스레드가 준비되길 기다림
-                    paymentService.processPayment(paymentId);
+                    paymentService.processPayment(tradeId);
                     success.incrementAndGet();
                 } catch (Exception e) {
                     fail.incrementAndGet();
@@ -119,11 +124,11 @@ class PaymentTest {
     @DisplayName("결제 비관적 락 테스트 - 1000번 동시에 결제해도 1번만 결제된다.")
     void payment_lock2() throws Exception {
 
-        PaymentRequest paymentRequest = new PaymentRequest();
+        TradeRequest paymentRequest = new TradeRequest();
         ReflectionTestUtils.setField(paymentRequest, "paymentAmount", BigDecimal.valueOf(5L));
         ReflectionTestUtils.setField(paymentRequest, "paybackAmount", BigDecimal.valueOf(1L));
 
-        Long paymentId = paymentService.createPayment(savedMember.getId(), paymentRequest);
+        Long tradeId = tradeService.requestTrade(savedMember.getId(), paymentRequest);
 
         AtomicInteger success = new AtomicInteger(0);
         AtomicInteger fail = new AtomicInteger(0);
@@ -137,7 +142,7 @@ class PaymentTest {
             executorService.execute(() -> {
                 try {
                     startLatch.await();
-                    paymentService.processPayment(paymentId);
+                    paymentService.processPayment(tradeId);
                     success.incrementAndGet();
                 } catch (Exception e) {
                     fail.incrementAndGet();
@@ -163,13 +168,13 @@ class PaymentTest {
     void cancel_payment() throws InterruptedException {
 
         // 500원 결제 요청
-        PaymentRequest paymentRequest = new PaymentRequest();
+        TradeRequest paymentRequest = new TradeRequest();
         ReflectionTestUtils.setField(paymentRequest, "paymentAmount", BigDecimal.valueOf(500L));
         ReflectionTestUtils.setField(paymentRequest, "paybackAmount", BigDecimal.valueOf(100L));
 
-        Long paymentId = paymentService.createPayment(savedMember.getId(), paymentRequest);
+        Long tradeId = tradeService.requestTrade(savedMember.getId(), paymentRequest);
 
-        paymentService.processPayment(paymentId);
+        paymentService.processPayment(tradeId);
 
         AtomicInteger success = new AtomicInteger(0);
         AtomicInteger fail = new AtomicInteger(0);
@@ -183,7 +188,7 @@ class PaymentTest {
             executorService.execute(() -> {
                 try {
                     startLatch.await();
-                    paymentService.cancelPayment(paymentId);
+                    paymentService.cancelPayment(tradeId);
                     success.incrementAndGet();
                 } catch (Exception e) {
                     fail.incrementAndGet();
