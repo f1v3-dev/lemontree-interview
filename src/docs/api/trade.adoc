@@ -1,0 +1,65 @@
+== 거래
+
+=== 거래 생성 - 성공
+
+.HTTP Request
+include::{snippets}/trade-controller-test/거래생성_성공/http-request.adoc[]
+include::{snippets}/trade-controller-test/거래생성_성공/path-parameters.adoc[]
+
+.Request Fields
+include::{snippets}/trade-controller-test/거래생성_성공/request-fields.adoc[]
+
+.HTTP Response
+include::{snippets}/trade-controller-test/거래생성_성공/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/trade-controller-test/거래생성_성공/response-fields.adoc[]
+
+=== 거래 생성 - 실패 (존재하지 않는 유저)
+
+.HTTP Request
+include::{snippets}/trade-controller-test/거래생성_실패_존재하지않는유저/http-request.adoc[]
+include::{snippets}/trade-controller-test/거래생성_실패_존재하지않는유저/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/trade-controller-test/거래생성_실패_존재하지않는유저/http-response.adoc[]
+
+.Error Response
+include::{snippets}/trade-controller-test/거래생성_실패_존재하지않는유저/response-fields.adoc[]
+
+=== 거래 생성 - 실패 (금액 미입력)
+
+.HTTP Request
+include::{snippets}/trade-controller-test/거래생성_실패_금액미입력/http-request.adoc[]
+include::{snippets}/trade-controller-test/거래생성_실패_금액미입력/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/trade-controller-test/거래생성_실패_금액미입력/http-response.adoc[]
+
+.Error Response
+include::{snippets}/trade-controller-test/거래생성_실패_금액미입력/response-fields.adoc[]
+
+=== 거래 생성 - 실패 (금액 음수)
+
+.HTTP Request
+include::{snippets}/trade-controller-test/거래생성_실패_금액음수/http-request.adoc[]
+include::{snippets}/trade-controller-test/거래생성_실패_금액음수/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/trade-controller-test/거래생성_실패_금액음수/http-response.adoc[]
+
+.Error Response
+include::{snippets}/trade-controller-test/거래생성_실패_금액음수/response-fields.adoc[]
+
+=== 거래 조회 - 성공
+
+.HTTP Request
+include::{snippets}/trade-controller-test/거래조회_성공/http-request.adoc[]
+include::{snippets}/trade-controller-test/거래조회_성공/path-parameters.adoc[]
+
+.HTTP Response
+include::{snippets}/trade-controller-test/거래조회_성공/http-response.adoc[]
+
+.Response Fields
+include::{snippets}/trade-controller-test/거래조회_성공/response-fields.adoc[]
+

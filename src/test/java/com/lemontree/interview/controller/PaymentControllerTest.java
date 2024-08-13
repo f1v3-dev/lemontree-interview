@@ -36,7 +36,12 @@ class PaymentControllerTest extends AbstractRestDocsTest {
         // expected
         mockMvc.perform(post("/api/v1/trades/{tradeId}/payments", tradeId)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andDo(restDocs.document(
+                        pathParameters(
+                                parameterWithName("tradeId").description("결제 요청 거래 ID")
+                        )
+                ));
     }
 
 

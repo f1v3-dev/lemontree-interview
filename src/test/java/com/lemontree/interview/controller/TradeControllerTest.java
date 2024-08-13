@@ -176,7 +176,7 @@ class TradeControllerTest extends AbstractRestDocsTest {
 
     @Test
     @DisplayName("거래 조회 - 성공")
-    void 거래_조회_성공() throws Exception {
+    void 거래조회_성공() throws Exception {
 
         // given
         Trade payment = Trade.builder()
