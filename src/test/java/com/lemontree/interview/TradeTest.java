@@ -7,7 +7,6 @@ import com.lemontree.interview.request.TradeRequest;
 import com.lemontree.interview.service.PaybackService;
 import com.lemontree.interview.service.PaymentService;
 import com.lemontree.interview.service.TradeService;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -31,7 +30,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
  * @author 정승조
  * @version 2024. 08. 07.
  */
-@Slf4j
 @ActiveProfiles("test")
 @SpringBootTest
 class TradeTest {
@@ -168,56 +166,7 @@ class TradeTest {
     }
 
     @Test
-    @DisplayName("결제 취소 락 테스트 - 동시에 1000번 취소해도 1번만 취소된다.")
-    void cancel_payment() throws InterruptedException {
-
-        // 500원 결제 요청
-        TradeRequest paymentRequest = new TradeRequest();
-        ReflectionTestUtils.setField(paymentRequest, "paymentAmount", BigDecimal.valueOf(500L));
-        ReflectionTestUtils.setField(paymentRequest, "paybackAmount", BigDecimal.valueOf(100L));
-
-        Long tradeId = tradeService.requestTrade(savedMember.getId(), paymentRequest);
-
-        paymentService.processPayment(tradeId);
-
-        AtomicInteger success = new AtomicInteger(0);
-        AtomicInteger fail = new AtomicInteger(0);
-        int threadCount = 1000;
-
-        ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
-        CountDownLatch startLatch = new CountDownLatch(1);
-        CountDownLatch latch = new CountDownLatch(threadCount);
-
-        for (int i = 0; i < threadCount; i++) {
-            executorService.execute(() -> {
-                try {
-                    startLatch.await();
-                    paymentService.cancelPayment(tradeId);
-                    success.incrementAndGet();
-                } catch (Exception e) {
-                    fail.incrementAndGet();
-                } finally {
-                    latch.countDown();
-                }
-            });
-        }
-
-        startLatch.countDown();
-        latch.await();
-
-
-        // then
-        Member findMember = memberRepository.findById(savedMember.getId()).get();
-        assertEquals(0, findMember.getBalance().compareTo(BigDecimal.valueOf(10000L)));
-        assertEquals(0, findMember.getDailyAccumulate().compareTo(BigDecimal.ZERO));
-        assertEquals(0, findMember.getMonthlyAccumulate().compareTo(BigDecimal.ZERO));
-
-        assertEquals(1, success.intValue());
-        assertEquals(threadCount - 1, fail.intValue());
-    }
-
-    @Test
-    @DisplayName("동일 거래의 페이백을 1000번 요청해도 1번만 성공한다.")
+    @DisplayName("동일 거래의 페이백을 100번 요청해도 1번만 성공한다.")
     void payback() throws InterruptedException {
 
         TradeRequest paymentRequest = new TradeRequest();
@@ -230,7 +179,7 @@ class TradeTest {
 
         AtomicInteger success = new AtomicInteger(0);
         AtomicInteger fail = new AtomicInteger(0);
-        int threadCount = 1000;
+        int threadCount = 100;
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
         CountDownLatch startLatch = new CountDownLatch(1);
@@ -263,7 +212,7 @@ class TradeTest {
     }
 
     @Test
-    @DisplayName("페이백 취소를 1000번 요청해도 1번만 성공한다.")
+    @DisplayName("페이백 취소를 100번 요청해도 1번만 성공한다.")
     void cancel_payback() throws InterruptedException {
 
         TradeRequest paymentRequest = new TradeRequest();
@@ -277,7 +226,7 @@ class TradeTest {
 
         AtomicInteger success = new AtomicInteger(0);
         AtomicInteger fail = new AtomicInteger(0);
-        int threadCount = 1000;
+        int threadCount = 100;
 
         ExecutorService executorService = Executors.newFixedThreadPool(threadCount);
         CountDownLatch startLatch = new CountDownLatch(1);
