@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.Optional;
 
 /**
- * Member JPA Repository.
+ * 유저 레포지토리 인터페이스 입니다.
  *
  * @author 정승조
  * @version 2024. 08. 07.
