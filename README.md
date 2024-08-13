@@ -259,12 +259,12 @@ CREATE TABLE `payment`
 
 ```properties
 # hikariCP Connection Pool
-spring.datasource.hikari.connection-timeout=5000
-spring.datasource.hikari.validation-timeout=5000
-spring.datasource.hikari.idle-timeout=60000
-spring.datasource.hikari.max-lifetime=1800000
-spring.datasource.hikari.minimum-idle=10
-spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.connection-timeout=3000
+spring.datasource.hikari.validation-timeout=2000
+spring.datasource.hikari.idle-timeout=50000
+spring.datasource.hikari.max-lifetime=50000
+spring.datasource.hikari.minimum-idle=15
+spring.datasource.hikari.maximum-pool-size=15
 ```
 
 - `connection-timout`: 커넥션 풀에서 커넥션을 얻기 위해 대기할 수 있는 최대 시간 (초과시, SQLException)
@@ -691,8 +691,6 @@ _테스트2. 100번의 시도 - 실패_
 - 테스트 결과, 커넥션 풀의 크기가 50개가 넘어갈 경우, 같은 수의 스레드가 요청해도 오류가 발생함.
 
 #### 예상 해결 방안
-
-> 아직 해결하지 못한 문제이므로, 추가적으로 해결 방안을 찾아보고 수정할 예정입니다.
 
 ```java
 @Lock(LockModeType.PESSIMISTIC_WRITE)
