@@ -24,26 +24,26 @@ public class PaybackController {
     /**
      * 완료된 결제건에 대해 페이백을 요청하는 메서드입니다.
      *
-     * @param paymentId 결제 ID
+     * @param tradeId 거래 ID
      * @return 201 (CREATED)
      */
-    @PostMapping("/api/v1/payments/{paymentId}/paybacks")
-    public ResponseEntity<Void> requestPayback(@PathVariable("paymentId") Long paymentId) {
+    @PostMapping("/api/v1/trades/{tradeId}/paybacks")
+    public ResponseEntity<Void> requestPayback(@PathVariable("tradeId") Long tradeId) {
 
-        paybackService.processPayback(paymentId);
+        paybackService.processPayback(tradeId);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     /**
      * 완료된 페이백건에 대해 페이백 취소를 요청하는 메서드입니다.
      *
-     * @param paymentId 결제 ID
+     * @param tradeId 거래 ID
      * @return 200 (OK)
      */
-    @DeleteMapping("/api/v1/payments/{paymentId}/paybacks")
-    public ResponseEntity<Void> cancelPayback(@PathVariable("paymentId") Long paymentId) {
+    @DeleteMapping("/api/v1/trades/{tradeId}/paybacks")
+    public ResponseEntity<Void> cancelPayback(@PathVariable("tradeId") Long tradeId) {
 
-        paybackService.cancelPayback(paymentId);
+        paybackService.cancelPayback(tradeId);
         return ResponseEntity.status(HttpStatus.OK).build();
     }
 }
