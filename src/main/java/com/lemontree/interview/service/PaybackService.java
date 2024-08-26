@@ -43,20 +43,20 @@ public class PaybackService {
     @Transactional(timeout = 5, isolation = Isolation.REPEATABLE_READ)
     public void processPayback(Long tradeId) {
 
-        Trade payment = tradeRepository.findWithPessimisticLockById(tradeId)
+        Trade trade = tradeRepository.findWithPessimisticLockById(tradeId)
                 .orElseThrow(TradeNotFoundException::new);
 
-        if (payment.getPaymentStatus() != PaymentStatus.DONE) {
+        if (trade.getPaymentStatus() != PaymentStatus.DONE) {
             throw new PaymentNotCompleteException();
         }
 
-        if (payment.getPaybackStatus() == PaybackStatus.DONE) {
+        if (trade.getPaybackStatus() == PaybackStatus.DONE) {
             throw new PaybackAlreadyDoneException();
         }
 
-        BigDecimal paybackAmount = payment.getPaybackAmount();
+        BigDecimal paybackAmount = trade.getPaybackAmount();
         if (BigDecimalUtils.is(paybackAmount).greaterThan(BigDecimal.ZERO)) {
-            Long memberId = payment.getMemberId();
+            Long memberId = trade.getMemberId();
             Member member = memberRepository.findWithPessimisticLockById(memberId)
                     .orElseThrow(MemberNotFoundException::new);
 
@@ -69,9 +69,9 @@ public class PaybackService {
             member.payback(paybackAmount);
         }
 
-        payment.completePayback();
+        trade.completePayback();
 
-        log.info("페이백이 완료되었습니다. [결제 ID = {}]", payment.getId());
+        log.info("페이백이 완료되었습니다. [결제 ID = {}]", trade.getId());
     }
 
     /**
